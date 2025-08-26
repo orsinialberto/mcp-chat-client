@@ -16,11 +16,18 @@ import {
   Key,
 } from "lucide-react"
 
+interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  createdAt: Date
+}
+
 interface Chat {
   id: string
   title: string
   createdAt: Date
-  lastMessage?: string
+  messages: ChatMessage[]
   messageCount: number
 }
 
@@ -81,18 +88,26 @@ export function Sidebar({
 
   // Carica chat, API keys e larghezza sidebar dal localStorage
   useEffect(() => {
-    const savedChats = localStorage.getItem("mcp-chats")
-    if (savedChats) {
-      try {
-        const parsedChats = JSON.parse(savedChats).map((chat: any) => ({
-          ...chat,
-          createdAt: new Date(chat.createdAt),
-        }))
-        setChats(parsedChats)
-      } catch (error) {
-        console.error("Errore caricamento chat:", error)
+    const loadChats = () => {
+      const savedChats = localStorage.getItem("mcp-chats")
+      if (savedChats) {
+        try {
+          const parsedChats = JSON.parse(savedChats).map((chat: any) => ({
+            ...chat,
+            createdAt: new Date(chat.createdAt),
+            messages: chat.messages?.map((msg: any) => ({
+              ...msg,
+              createdAt: new Date(msg.createdAt)
+            })) || []
+          }))
+          setChats(parsedChats)
+        } catch (error) {
+          console.error("Errore caricamento chat:", error)
+        }
       }
     }
+
+    loadChats()
 
     // Carica API keys salvate dal localStorage
     const savedApiKeys = localStorage.getItem("mcp-api-keys")
@@ -124,6 +139,10 @@ export function Sidebar({
           const parsedChats = JSON.parse(savedChats).map((chat: any) => ({
             ...chat,
             createdAt: new Date(chat.createdAt),
+            messages: chat.messages?.map((msg: any) => ({
+              ...msg,
+              createdAt: new Date(msg.createdAt)
+            })) || []
           }))
           setChats(parsedChats)
         } catch (error) {
@@ -237,19 +256,6 @@ export function Sidebar({
     localStorage.setItem("mcp-chats", JSON.stringify(updatedChats))
   }
 
-  // Aggiungi nuova chat
-  const addNewChat = (title = "Nuova Chat") => {
-    const newChat: Chat = {
-      id: Date.now().toString(),
-      title,
-      createdAt: new Date(),
-      messageCount: 0,
-    }
-    const updatedChats = [newChat, ...chats]
-    saveChats(updatedChats)
-    return newChat.id
-  }
-
   // Aggiorna chat esistente
   const updateChat = (chatId: string, updates: Partial<Chat>) => {
     const updatedChats = chats.map((chat) => (chat.id === chatId ? { ...chat, ...updates } : chat))
@@ -288,8 +294,6 @@ export function Sidebar({
 
   // Gestisci nuova chat
   const handleNewChat = () => {
-    const newChatId = addNewChat()
-    onChatSelect(newChatId)
     onNewChat()
   }
 
@@ -338,6 +342,16 @@ export function Sidebar({
       default:
         return "Non verificata"
     }
+  }
+
+  // Ottieni ultimo messaggio della chat per il preview
+  const getLastMessage = (chat: Chat) => {
+    if (chat.messages.length === 0) return "Nessun messaggio"
+    const lastMessage = chat.messages[chat.messages.length - 1]
+    const preview = lastMessage.content.length > 80 
+      ? lastMessage.content.substring(0, 80) + "..."
+      : lastMessage.content
+    return `${lastMessage.role === 'user' ? 'Tu: ' : 'Archimede: '}${preview}`
   }
 
   if (!isOpen) {
@@ -400,7 +414,7 @@ export function Sidebar({
               {chats.map((chat) => (
                 <div
                   key={chat.id}
-                  className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                  className={`group flex items-start gap-2 px-3 py-3 rounded-lg cursor-pointer transition-colors ${
                     currentChatId === chat.id ? "bg-gray-100" : "hover:bg-gray-50"
                   }`}
                   onClick={() => onChatSelect(chat.id)}
@@ -440,9 +454,13 @@ export function Sidebar({
                   ) : (
                     <>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-light text-gray-900 truncate">{chat.title}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate mb-1">{chat.title}</p>
+                        <p className="text-xs text-gray-500 truncate">{getLastMessage(chat)}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {chat.messageCount} messaggi • {chat.createdAt.toLocaleDateString()}
+                        </p>
                       </div>
-                      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
+                      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 pt-1">
                         <button
                           onClick={(e) => {
                             e.stopPropagation()

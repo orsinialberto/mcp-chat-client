@@ -6,6 +6,21 @@ import { useChat } from '@ai-sdk/react'
 import { MessageContent } from "@/components/message-content"
 import { Sidebar } from "@/components/sidebar"
 
+interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  createdAt: Date
+}
+
+interface SavedChat {
+  id: string
+  title: string
+  createdAt: Date
+  messages: ChatMessage[]
+  messageCount: number
+}
+
 export default function MCPChatClient() {
   const [mcpServerUrl, setMcpServerUrl] = useState("http://localhost:8080")
   const [selectedProvider, setSelectedProvider] = useState("groq")
@@ -14,6 +29,8 @@ export default function MCPChatClient() {
   const [isConnected, setIsConnected] = useState(false)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [savedChats, setSavedChats] = useState<SavedChat[]>([])
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Carica API keys dal localStorage e variabili d'ambiente
@@ -52,50 +69,128 @@ export default function MCPChatClient() {
     }
   }, [])
 
-  // Inizializza la prima chat automaticamente
+  // Carica le chat salvate
   useEffect(() => {
-    if (!isInitialized) {
-      // Crea automaticamente la prima chat
-      const newChatId = createInitialChat()
-      setCurrentChatId(newChatId)
-      setIsInitialized(true)
-    }
-  }, [isInitialized])
-
-  // Funzione per creare la chat iniziale
-  const createInitialChat = (): string => {
-    const newChat = {
-      id: Date.now().toString(),
-      title: "Chat con Archimede",
-      createdAt: new Date(),
-      messageCount: 0,
-    }
-
-    // Carica chat esistenti e aggiungi la nuova
-    const savedChats = localStorage.getItem("mcp-chats")
-    let existingChats = []
-    
-    if (savedChats) {
-      try {
-        existingChats = JSON.parse(savedChats)
-      } catch (error) {
-        console.error("Errore caricamento chat esistenti:", error)
+    const loadSavedChats = () => {
+      const savedChatsData = localStorage.getItem("mcp-chats")
+      if (savedChatsData) {
+        try {
+          const parsedChats = JSON.parse(savedChatsData).map((chat: any) => ({
+            ...chat,
+            createdAt: new Date(chat.createdAt),
+            messages: chat.messages?.map((msg: any) => ({
+              ...msg,
+              createdAt: new Date(msg.createdAt)
+            })) || []
+          }))
+          setSavedChats(parsedChats)
+        } catch (error) {
+          console.error("Errore caricamento chat:", error)
+          setSavedChats([])
+        }
       }
     }
 
-    // Se non ci sono chat esistenti, crea la prima
-    if (existingChats.length === 0) {
-      const updatedChats = [newChat]
-      localStorage.setItem("mcp-chats", JSON.stringify(updatedChats))
-      return newChat.id
+    loadSavedChats()
+  }, [])
+
+  // Inizializza la prima chat automaticamente
+  useEffect(() => {
+    if (!isInitialized && savedChats.length >= 0) {
+      let chatId: string
+      
+      if (savedChats.length === 0) {
+        // Crea automaticamente la prima chat se non ce ne sono
+        chatId = createInitialChat()
+      } else {
+        // Usa la prima chat esistente
+        chatId = savedChats[0].id
+      }
+      
+      setCurrentChatId(chatId)
+      setIsInitialized(true)
+    }
+  }, [isInitialized, savedChats])
+
+  // Funzione per salvare le chat nel localStorage
+  const saveChatsToStorage = (chats: SavedChat[]) => {
+    localStorage.setItem("mcp-chats", JSON.stringify(chats))
+    setSavedChats([...chats])
+  }
+
+  // Funzione per creare la chat iniziale
+  const createInitialChat = (): string => {
+    const newChat: SavedChat = {
+      id: Date.now().toString(),
+      title: "Chat con Archimede",
+      createdAt: new Date(),
+      messages: [],
+      messageCount: 0,
     }
 
-    // Se ci sono già delle chat, usa la prima esistente
-    return existingChats[0].id
+    const updatedChats = [newChat, ...savedChats]
+    saveChatsToStorage(updatedChats)
+    return newChat.id
+  }
+
+  // Funzione per creare una nuova chat
+  const createNewChat = (): string => {
+    const newChat: SavedChat = {
+      id: Date.now().toString(),
+      title: "Nuova Chat",
+      createdAt: new Date(),
+      messages: [],
+      messageCount: 0,
+    }
+
+    const updatedChats = [newChat, ...savedChats]
+    saveChatsToStorage(updatedChats)
+    return newChat.id
+  }
+
+  // Funzione per salvare un messaggio nella chat attuale
+  const saveMessageToChat = (chatId: string, message: ChatMessage) => {
+    setSavedChats(prevChats => {
+      const updatedChats = prevChats.map(chat => {
+        if (chat.id === chatId) {
+          const updatedMessages = [...chat.messages, message]
+          
+          // Se è il primo messaggio utente, aggiorna il titolo
+          const isFirstUserMessage = message.role === 'user' && 
+            chat.messages.filter(m => m.role === 'user').length === 0
+          
+          let newTitle = chat.title
+          if (isFirstUserMessage) {
+            newTitle = message.content.length > 50 
+              ? message.content.substring(0, 50).trim() + "..."
+              : message.content.trim()
+          }
+          
+          return {
+            ...chat,
+            messages: updatedMessages,
+            messageCount: updatedMessages.length,
+            title: newTitle
+          }
+        }
+        return chat
+      })
+      
+      // Salva anche nel localStorage
+      localStorage.setItem("mcp-chats", JSON.stringify(updatedChats))
+      return updatedChats
+    })
+  }
+
+  // Ottieni i messaggi della chat corrente
+  const getCurrentChatMessages = () => {
+    if (!currentChatId) return []
+    const currentChat = savedChats.find(chat => chat.id === currentChatId)
+    return currentChat?.messages || []
   }
 
   // Usa useChat dall'AI SDK
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, error } = useChat({
+  const { messages, input, handleInputChange, append, isLoading, setMessages, error } = useChat({
     api: '/api/chat',
     body: {
       provider: selectedProvider,
@@ -105,8 +200,65 @@ export default function MCPChatClient() {
     onError: (error) => {
       console.error('Errore dettagliato nella chat:', error)
       alert(`Errore: ${error.message}`)
+    },
+    onFinish: (message) => {
+      // Salva il messaggio dell'assistant quando la risposta è completata
+      if (currentChatId) {
+        const assistantMessage: ChatMessage = {
+          id: message.id || `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: message.content,
+          createdAt: new Date()
+        }
+        saveMessageToChat(currentChatId, assistantMessage)
+      }
     }
   })
+
+  // Gestisci l'invio del messaggio
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    
+    if (!input.trim() || !currentChatId || isLoading) return
+
+    const userInput = input.trim()
+
+    // Salva il messaggio dell'utente
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: userInput,
+      createdAt: new Date()
+    }
+    
+    // Salva immediatamente il messaggio utente
+    saveMessageToChat(currentChatId, userMessage)
+
+    // Invia il messaggio all'AI
+    await append({
+      role: 'user',
+      content: userInput
+    })
+
+    // Svuota il campo di input dopo l'invio
+    handleInputChange({ target: { value: "" } } as any)
+  }
+
+  // Carica i messaggi quando cambia la chat corrente
+  useEffect(() => {
+    if (currentChatId && !isLoadingMessages) {
+      setIsLoadingMessages(true)
+      const currentChatMessages = getCurrentChatMessages()
+      // Converti i messaggi salvati nel formato richiesto da useChat
+      const formattedMessages = currentChatMessages.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content
+      }))
+      setMessages(formattedMessages)
+      setIsLoadingMessages(false)
+    }
+  }, [currentChatId])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -122,20 +274,15 @@ export default function MCPChatClient() {
     }
   }
 
-  const clearMessages = () => {
-    setMessages([])
-  }
-
   const handleNewChat = () => {
-    clearMessages()
-    // Crea una nuova chat che verrà gestita dalla sidebar
+    const newChatId = createNewChat()
+    setCurrentChatId(newChatId)
   }
 
   const handleChatSelect = (chatId: string | null) => {
-    setCurrentChatId(chatId)
-    // Qui potresti caricare i messaggi della chat selezionata
-    // Per ora cancelliamo i messaggi per simulare il cambio chat
-    clearMessages()
+    if (chatId) {
+      setCurrentChatId(chatId)
+    }
   }
 
   // Gestisci cambio provider
@@ -161,6 +308,13 @@ export default function MCPChatClient() {
       default:
         return selectedProvider
     }
+  }
+
+  // Ottieni il titolo della chat corrente
+  const getCurrentChatTitle = () => {
+    if (!currentChatId) return "Chat con Archimede"
+    const currentChat = savedChats.find(chat => chat.id === currentChatId)
+    return currentChat?.title || "Chat con Archimede"
   }
 
   // Verifica se l'API key del provider attuale è disponibile (localStorage o env)
@@ -196,7 +350,7 @@ export default function MCPChatClient() {
               </button>
             )}
             <div className="flex-1">
-              <h1 className="text-lg font-light text-gray-900">Chat con Archimede</h1>
+              <h1 className="text-lg font-light text-gray-900">{getCurrentChatTitle()}</h1>
               <p className="text-sm text-gray-500">Assistente AI specializzato in segmentazione Marketing Cloud</p>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -216,7 +370,7 @@ export default function MCPChatClient() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-6">
           <div className="max-w-4xl mx-auto space-y-6">
-            {messages.length === 0 && !isLoading && (
+            {messages.length === 0 && !isLoading && !isLoadingMessages && (
               <div className="text-center mt-20">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Bot className="w-8 h-8 text-blue-600" />
@@ -256,6 +410,12 @@ export default function MCPChatClient() {
                     <div className="text-sm text-gray-500">Supporto per problemi e soluzioni</div>
                   </button>
                 </div>
+              </div>
+            )}
+
+            {isLoadingMessages && (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
               </div>
             )}
 
