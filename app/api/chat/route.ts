@@ -1,4 +1,5 @@
 import { groq } from "@ai-sdk/groq";
+import { anthropic } from "@ai-sdk/anthropic";
 import { experimental_createMCPClient, streamText } from 'ai';
 import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio';
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     console.log("📥 Body ricevuto:", JSON.stringify(body, null, 2))
 
-    const { messages, model: selectedModel, apiKey } = body
+    const { messages, provider = "groq", model: selectedModel, apiKey } = body
 
     if (!messages || !Array.isArray(messages)) {
       console.error("❌ Messaggi non validi:", messages)
@@ -84,26 +85,58 @@ export async function POST(req: Request) {
     }
 
     console.log("📝 Messaggi da processare:", messages.length)
+    console.log("🤖 Provider selezionato:", provider)
     console.log("🎯 Modello selezionato:", selectedModel)
 
-    // Verifica API key Groq
-    const groqKey = apiKey || process.env.GROQ_API_KEY
-    if (!groqKey) {
-      return new Response(
-        JSON.stringify({
-          error: "API Key Groq non configurata",
-          details: "Inserisci la tua API key Groq nelle impostazioni o aggiungi GROQ_API_KEY nel file .env.local.",
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
-      )
+    // Configurazione modello basata sul provider
+    let model
+    let providerName = ""
+
+    switch (provider) {
+      case "groq":
+        const groqKey = apiKey || process.env.GROQ_API_KEY
+        if (!groqKey) {
+          return new Response(
+            JSON.stringify({
+              error: "API Key Groq non configurata",
+              details: "Inserisci la tua API key Groq nelle impostazioni o aggiungi GROQ_API_KEY nel file .env.local.",
+            }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
+          )
+        }
+        model = groq(selectedModel || "llama-3.1-8b-instant", { 
+          apiKey: groqKey,
+          tools: true 
+        })
+        providerName = "Groq"
+        break
+
+      case "anthropic":
+        const anthropicKey = apiKey || process.env.ANTHROPIC_API_KEY
+        if (!anthropicKey) {
+          return new Response(
+            JSON.stringify({
+              error: "API Key Anthropic non configurata",
+              details: "Inserisci la tua API key Anthropic nelle impostazioni o aggiungi ANTHROPIC_API_KEY nel file .env.local",
+            }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
+          )
+        }
+        model = anthropic(selectedModel || "claude-3-5-sonnet-20241022", { apiKey: anthropicKey })
+        providerName = "Anthropic"
+        break
+
+      default:
+        return new Response(
+          JSON.stringify({
+            error: "Provider non supportato",
+            details: `Provider '${provider}' non riconosciuto. Usa: groq, anthropic`,
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        )
     }
 
-    const model = groq(selectedModel || "llama-3.1-8b-instant", { 
-      apiKey: groqKey,
-      tools: true 
-    })
-
-    console.log("✅ Groq configurato correttamente")
+    console.log(`✅ ${providerName} configurato correttamente`)
 
     // Definisci gli strumenti MCP se il server è connesso
     let tools = {}

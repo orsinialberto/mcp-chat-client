@@ -30,7 +30,9 @@ interface SidebarProps {
   currentChatId: string | null
   onChatSelect: (chatId: string | null) => void
   onNewChat: () => void
+  selectedProvider: string
   selectedModel: string
+  onProviderChange: (provider: string) => void
   onModelChange: (model: string) => void
   mcpServerUrl: string
   onMcpServerUrlChange: (url: string) => void
@@ -44,7 +46,9 @@ export function Sidebar({
   currentChatId,
   onChatSelect,
   onNewChat,
+  selectedProvider,
   selectedModel,
+  onProviderChange,
   onModelChange,
   mcpServerUrl,
   onMcpServerUrlChange,
@@ -61,12 +65,21 @@ export function Sidebar({
   const [isResizing, setIsResizing] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
 
-  // Stati per l'API key Groq
-  const [apiKey, setApiKey] = useState("")
-  const [showApiKey, setShowApiKey] = useState(false)
-  const [apiKeyStatus, setApiKeyStatus] = useState<'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error'>('unknown')
+  // Stati per API keys dei due provider
+  const [apiKeys, setApiKeys] = useState({
+    groq: "",
+    anthropic: "",
+  })
+  const [showApiKeys, setShowApiKeys] = useState({
+    groq: false,
+    anthropic: false,
+  })
+  const [apiKeyStatus, setApiKeyStatus] = useState({
+    groq: 'unknown' as 'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error',
+    anthropic: 'unknown' as 'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error',
+  })
 
-  // Carica chat, API key e larghezza sidebar dal localStorage
+  // Carica chat, API keys e larghezza sidebar dal localStorage
   useEffect(() => {
     const savedChats = localStorage.getItem("mcp-chats")
     if (savedChats) {
@@ -81,10 +94,15 @@ export function Sidebar({
       }
     }
 
-    // Carica API key salvata
-    const savedApiKey = localStorage.getItem("mcp-groq-api-key")
-    if (savedApiKey) {
-      setApiKey(savedApiKey)
+    // Carica API keys salvate
+    const savedApiKeys = localStorage.getItem("mcp-api-keys")
+    if (savedApiKeys) {
+      try {
+        const parsedKeys = JSON.parse(savedApiKeys)
+        setApiKeys(parsedKeys)
+      } catch (error) {
+        console.error("Errore caricamento API keys:", error)
+      }
     }
 
     // Carica larghezza sidebar salvata
@@ -136,46 +154,50 @@ export function Sidebar({
     }
   }, [isResizing])
 
-  // Salva API key nel localStorage
-  const saveApiKey = (key: string) => {
-    setApiKey(key)
-    localStorage.setItem("mcp-groq-api-key", key)
+  // Salva API keys nel localStorage
+  const saveApiKeys = (newKeys: typeof apiKeys) => {
+    setApiKeys(newKeys)
+    localStorage.setItem("mcp-api-keys", JSON.stringify(newKeys))
   }
 
   // Testa validità API key
-  const testApiKey = async (key: string) => {
+  const testApiKey = async (provider: string, key: string) => {
     if (!key.trim()) {
-      setApiKeyStatus("empty")
+      setApiKeyStatus(prev => ({ ...prev, [provider]: 'empty' }))
       return
     }
 
-    setApiKeyStatus("testing")
+    setApiKeyStatus(prev => ({ ...prev, [provider]: 'testing' }))
 
     try {
       const response = await fetch("/api/test-api-key", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: "groq", apiKey: key }),
+        body: JSON.stringify({ provider, apiKey: key }),
       })
 
       const result = await response.json()
-      setApiKeyStatus(result.valid ? "valid" : "invalid")
+      setApiKeyStatus(prev => ({
+        ...prev,
+        [provider]: result.valid ? 'valid' : 'invalid',
+      }))
     } catch (error) {
-      setApiKeyStatus("error")
+      setApiKeyStatus(prev => ({ ...prev, [provider]: 'error' }))
     }
   }
 
   // Gestisci cambio API key
-  const handleApiKeyChange = (value: string) => {
-    saveApiKey(value)
+  const handleApiKeyChange = (provider: string, value: string) => {
+    const newKeys = { ...apiKeys, [provider]: value }
+    saveApiKeys(newKeys)
 
     // Reset status quando si modifica la key
-    setApiKeyStatus("unknown")
+    setApiKeyStatus(prev => ({ ...prev, [provider]: 'unknown' }))
 
     // Testa automaticamente dopo 1 secondo di inattività
     setTimeout(() => {
-      if (apiKey === value) {
-        testApiKey(value)
+      if (newKeys[provider as keyof typeof newKeys] === value) {
+        testApiKey(provider, value)
       }
     }, 1000)
   }
@@ -242,9 +264,22 @@ export function Sidebar({
     onNewChat()
   }
 
+  // Ottieni placeholder per API key
+  const getApiKeyPlaceholder = (provider: string) => {
+    switch (provider) {
+      case "groq":
+        return "gsk_..."
+      case "anthropic":
+        return "sk-ant-..."
+      default:
+        return "Inserisci API key"
+    }
+  }
+
   // Ottieni status icon per API key
-  const getStatusIcon = () => {
-    switch (apiKeyStatus) {
+  const getStatusIcon = (provider: string) => {
+    const status = apiKeyStatus[provider as keyof typeof apiKeyStatus]
+    switch (status) {
       case "valid":
         return <div className="w-2 h-2 bg-green-500 rounded-full" />
       case "invalid":
@@ -258,8 +293,9 @@ export function Sidebar({
   }
 
   // Ottieni messaggio di status
-  const getStatusMessage = () => {
-    switch (apiKeyStatus) {
+  const getStatusMessage = (provider: string) => {
+    const status = apiKeyStatus[provider as keyof typeof apiKeyStatus]
+    switch (status) {
       case "valid":
         return "API key valida"
       case "invalid":
@@ -417,37 +453,93 @@ export function Sidebar({
 
           {showSettings && (
             <div className="mt-3 space-y-5">
+              {/* Provider Selection */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-3">
+                  Provider AI
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedProvider}
+                    onChange={(e) => onProviderChange(e.target.value)}
+                    className="w-full px-4 py-3 text-sm font-light text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer transition-all duration-200 hover:border-gray-300 hover:shadow-sm"
+                    style={{
+                      fontFamily: "Raleway, sans-serif",
+                      fontWeight: "300",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    <option
+                      value="groq"
+                      style={{
+                        fontFamily: "Raleway, sans-serif",
+                        fontWeight: "300",
+                        padding: "12px 16px",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      Groq (Gratuito)
+                    </option>
+                    <option
+                      value="anthropic"
+                      style={{
+                        fontFamily: "Raleway, sans-serif",
+                        fontWeight: "300",
+                        padding: "12px 16px",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      Anthropic Claude
+                    </option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
               {/* API Key Input */}
               <div>
                 <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-3">
                   <Key className="w-3 h-3 inline mr-1" />
-                  API Key Groq
+                  API Key {selectedProvider}
                 </label>
                 <div className="space-y-2">
                   <div className="relative">
                     <input
-                      type={showApiKey ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => handleApiKeyChange(e.target.value)}
-                      placeholder="gsk_..."
+                      type={showApiKeys[selectedProvider as keyof typeof showApiKeys] ? "text" : "password"}
+                      value={apiKeys[selectedProvider as keyof typeof apiKeys]}
+                      onChange={(e) => handleApiKeyChange(selectedProvider, e.target.value)}
+                      placeholder={getApiKeyPlaceholder(selectedProvider)}
                       className="w-full px-4 py-3 pr-20 text-sm font-light text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-all duration-200 hover:border-gray-300"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-3">
-                      {getStatusIcon()}
+                      {getStatusIcon(selectedProvider)}
                       <button
                         type="button"
-                        onClick={() => setShowApiKey(!showApiKey)}
+                        onClick={() =>
+                          setShowApiKeys(prev => ({
+                            ...prev,
+                            [selectedProvider]: !prev[selectedProvider as keyof typeof prev],
+                          }))
+                        }
                         className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                       >
-                        {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showApiKeys[selectedProvider as keyof typeof showApiKeys] ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-light text-gray-500">{getStatusMessage()}</span>
-                    {apiKey && (
+                    <span className="text-xs font-light text-gray-500">{getStatusMessage(selectedProvider)}</span>
+                    {apiKeys[selectedProvider as keyof typeof apiKeys] && (
                       <button
-                        onClick={() => testApiKey(apiKey)}
+                        onClick={() => testApiKey(selectedProvider, apiKeys[selectedProvider as keyof typeof apiKeys])}
                         className="text-xs font-normal text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
                       >
                         Verifica
@@ -456,7 +548,8 @@ export function Sidebar({
                   </div>
                 </div>
                 <p className="text-xs font-light text-gray-500 mt-2">
-                  Registrati gratuitamente su console.groq.com
+                  {selectedProvider === "groq" && "Registrati gratuitamente su console.groq.com"}
+                  {selectedProvider === "anthropic" && "Ottieni la tua API key da console.anthropic.com"}
                 </p>
               </div>
 
@@ -474,51 +567,104 @@ export function Sidebar({
                       lineHeight: "1.5",
                     }}
                   >
-                    <option
-                      value="llama-3.1-8b-instant"
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        padding: "12px 16px",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      Llama 3.1 8B (Consigliato)
-                    </option>
-                    <option
-                      disabled
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        color: "#9CA3AF",
-                        fontSize: "11px",
-                        padding: "8px 16px",
-                      }}
-                    >
-                      ────────────────────
-                    </option>
-                    <option
-                      value="mixtral-8x7b-32768"
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        padding: "12px 16px",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      Mixtral 8x7B
-                    </option>
-                    <option
-                      value="llama-3.1-70b-versatile"
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        padding: "12px 16px",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      Llama 3.1 70B (Più potente)
-                    </option>
+                    {selectedProvider === "groq" && (
+                      <>
+                        <option
+                          value="llama-3.1-8b-instant"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Llama 3.1 8B (Consigliato)
+                        </option>
+                        <option
+                          disabled
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            color: "#9CA3AF",
+                            fontSize: "11px",
+                            padding: "8px 16px",
+                          }}
+                        >
+                          ────────────────────
+                        </option>
+                        <option
+                          value="mixtral-8x7b-32768"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Mixtral 8x7B
+                        </option>
+                        <option
+                          value="llama-3.1-70b-versatile"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Llama 3.1 70B (Più potente)
+                        </option>
+                      </>
+                    )}
+                    {selectedProvider === "anthropic" && (
+                      <>
+                        <option
+                          value="claude-3-5-sonnet-20241022"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Claude 3.5 Sonnet (Consigliato)
+                        </option>
+                        <option
+                          disabled
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            color: "#9CA3AF",
+                            fontSize: "11px",
+                            padding: "8px 16px",
+                          }}
+                        >
+                          ────────────────────
+                        </option>
+                        <option
+                          value="claude-3-5-haiku-20241022"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Claude 3.5 Haiku (Veloce)
+                        </option>
+                        <option
+                          value="claude-3-opus-20240229"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Claude 3 Opus (Massima qualità)
+                        </option>
+                      </>
+                    )}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

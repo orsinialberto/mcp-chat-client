@@ -8,18 +8,23 @@ import { Sidebar } from "@/components/sidebar"
 
 export default function MCPChatClient() {
   const [mcpServerUrl, setMcpServerUrl] = useState("http://localhost:8080")
+  const [selectedProvider, setSelectedProvider] = useState("groq")
   const [selectedModel, setSelectedModel] = useState("llama-3.1-8b-instant")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Carica API key dal localStorage
-  const [apiKey, setApiKey] = useState("")
+  // Carica API keys dal localStorage
+  const [apiKeys, setApiKeys] = useState({ groq: "", anthropic: "" })
 
   useEffect(() => {
-    const savedApiKey = localStorage.getItem("mcp-groq-api-key")
-    if (savedApiKey) {
-      setApiKey(savedApiKey)
+    const savedApiKeys = localStorage.getItem("mcp-api-keys")
+    if (savedApiKeys) {
+      try {
+        setApiKeys(JSON.parse(savedApiKeys))
+      } catch (error) {
+        console.error("Errore caricamento API keys:", error)
+      }
     }
   }, [])
 
@@ -27,8 +32,9 @@ export default function MCPChatClient() {
   const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, error } = useChat({
     api: '/api/chat',
     body: {
+      provider: selectedProvider,
       model: selectedModel,
-      apiKey,
+      apiKey: apiKeys[selectedProvider as keyof typeof apiKeys],
     },
     onError: (error) => {
       console.error('Errore dettagliato nella chat:', error)
@@ -54,6 +60,34 @@ export default function MCPChatClient() {
     setMessages([])
   }
 
+  // Gestisci cambio provider
+  const handleProviderChange = (provider: string) => {
+    setSelectedProvider(provider)
+    
+    // Imposta modelli di default per ogni provider
+    const defaultModels = {
+      groq: "llama-3.1-8b-instant",
+      anthropic: "claude-3-5-sonnet-20241022",
+    }
+    
+    setSelectedModel(defaultModels[provider as keyof typeof defaultModels])
+  }
+
+  // Ottieni il nome del provider attuale
+  const getProviderDisplayName = () => {
+    switch (selectedProvider) {
+      case "groq":
+        return "Groq"
+      case "anthropic":
+        return "Anthropic"
+      default:
+        return selectedProvider
+    }
+  }
+
+  // Verifica se l'API key del provider attuale è disponibile
+  const currentApiKey = apiKeys[selectedProvider as keyof typeof apiKeys]
+
   return (
     <div className="flex h-screen bg-white">
       {/* Sidebar */}
@@ -63,7 +97,9 @@ export default function MCPChatClient() {
         currentChatId={null}
         onChatSelect={() => {}}
         onNewChat={clearMessages}
+        selectedProvider={selectedProvider}
         selectedModel={selectedModel}
+        onProviderChange={handleProviderChange}
         onModelChange={setSelectedModel}
         mcpServerUrl={mcpServerUrl}
         onMcpServerUrlChange={setMcpServerUrl}
@@ -86,9 +122,15 @@ export default function MCPChatClient() {
               <p className="text-sm text-gray-500">Assistente AI specializzato in segmentazione Marketing Cloud</p>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>Groq</span>
+              <span>{getProviderDisplayName()}</span>
               <div className="w-1 h-1 bg-gray-300 rounded-full" />
               <span>{selectedModel}</span>
+              {currentApiKey && (
+                <>
+                  <div className="w-1 h-1 bg-gray-300 rounded-full" />
+                  <div className="w-2 h-2 bg-green-500 rounded-full" title="API key configurata" />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -199,7 +241,7 @@ export default function MCPChatClient() {
                       <strong>Errore:</strong> {error.message}
                     </p>
                     <p className="text-xs text-red-600 mt-1">
-                      Verifica la tua API key Groq nelle impostazioni o riprova più tardi.
+                      Verifica la tua API key {getProviderDisplayName()} nelle impostazioni o riprova più tardi.
                     </p>
                   </div>
                 </div>
@@ -213,10 +255,10 @@ export default function MCPChatClient() {
         {/* Input */}
         <div className="border-t border-gray-100 p-4 bg-white">
           <div className="max-w-4xl mx-auto">
-            {!apiKey && (
+            {!currentApiKey && (
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
-                  <strong>API Key mancante:</strong> Configura la tua API key Groq nelle impostazioni per iniziare a chattare.
+                  <strong>API Key mancante:</strong> Configura la tua API key {getProviderDisplayName()} nelle impostazioni per iniziare a chattare.
                 </p>
               </div>
             )}
@@ -224,13 +266,13 @@ export default function MCPChatClient() {
               <input
                 value={input}
                 onChange={handleInputChange}
-                placeholder={apiKey ? "Scrivi la tua domanda su segmentazione..." : "Configura prima l'API key nelle impostazioni"}
-                disabled={isLoading || !apiKey}
+                placeholder={currentApiKey ? "Scrivi la tua domanda su segmentazione..." : "Configura prima l'API key nelle impostazioni"}
+                disabled={isLoading || !currentApiKey}
                 className="w-full px-4 py-3 pr-12 font-light border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50 placeholder-gray-400"
               />
               <button
                 type="submit"
-                disabled={isLoading || !input.trim() || !apiKey}
+                disabled={isLoading || !input.trim() || !currentApiKey}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:hover:text-gray-400"
               >
                 {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
