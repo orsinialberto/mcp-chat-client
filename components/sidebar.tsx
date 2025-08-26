@@ -94,7 +94,7 @@ export function Sidebar({
       }
     }
 
-    // Carica API keys salvate
+    // Carica API keys salvate dal localStorage
     const savedApiKeys = localStorage.getItem("mcp-api-keys")
     if (savedApiKeys) {
       try {
@@ -526,6 +526,7 @@ export function Sidebar({
                           }))
                         }
                         className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                        disabled={apiKeys[selectedProvider as keyof typeof apiKeys] === "env"}
                       >
                         {showApiKeys[selectedProvider as keyof typeof showApiKeys] ? (
                           <EyeOff className="w-4 h-4" />
@@ -536,8 +537,13 @@ export function Sidebar({
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-light text-gray-500">{getStatusMessage(selectedProvider)}</span>
-                    {apiKeys[selectedProvider as keyof typeof apiKeys] && (
+                    <span className="text-xs font-light text-gray-500">
+                      {apiKeys[selectedProvider as keyof typeof apiKeys] === "env" 
+                        ? "API key configurata nel server" 
+                        : getStatusMessage(selectedProvider)
+                      }
+                    </span>
+                    {apiKeys[selectedProvider as keyof typeof apiKeys] && apiKeys[selectedProvider as keyof typeof apiKeys] !== "env" && (
                       <button
                         onClick={() => testApiKey(selectedProvider, apiKeys[selectedProvider as keyof typeof apiKeys])}
                         className="text-xs font-normal text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
