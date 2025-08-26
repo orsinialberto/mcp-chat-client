@@ -11,6 +11,7 @@ interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   createdAt: Date
+  isError?: boolean // Nuovo campo per identificare i messaggi di errore
 }
 
 interface SavedChat {
@@ -80,7 +81,8 @@ export default function MCPChatClient() {
             createdAt: new Date(chat.createdAt),
             messages: chat.messages?.map((msg: any) => ({
               ...msg,
-              createdAt: new Date(msg.createdAt)
+              createdAt: new Date(msg.createdAt),
+              isError: msg.isError || false // Mantieni il flag isError esistente
             })) || []
           }))
           setSavedChats(parsedChats)
@@ -199,6 +201,18 @@ export default function MCPChatClient() {
     },
     onError: (error) => {
       console.error('Errore dettagliato nella chat:', error)
+      
+      // Salva il messaggio di errore nello storico della chat
+      if (currentChatId) {
+        const errorMessage: ChatMessage = {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: `**Errore:** ${error.message}\n\nVerifica la tua API key ${getProviderDisplayName()} nelle impostazioni o riprova più tardi.`,
+          createdAt: new Date(),
+          isError: true // Flag per identificare i messaggi di errore
+        }
+        saveMessageToChat(currentChatId, errorMessage)
+      }
     },
     onFinish: (message) => {
       // Salva il messaggio dell'assistant quando la risposta è completata
@@ -207,7 +221,8 @@ export default function MCPChatClient() {
           id: message.id || `assistant-${Date.now()}`,
           role: 'assistant',
           content: message.content,
-          createdAt: new Date()
+          createdAt: new Date(),
+          isError: false
         }
         saveMessageToChat(currentChatId, assistantMessage)
       }
@@ -227,7 +242,8 @@ export default function MCPChatClient() {
       id: `user-${Date.now()}`,
       role: 'user',
       content: userInput,
-      createdAt: new Date()
+      createdAt: new Date(),
+      isError: false
     }
     
     // Salva immediatamente il messaggio utente
@@ -248,12 +264,14 @@ export default function MCPChatClient() {
     if (currentChatId && !isLoadingMessages) {
       setIsLoadingMessages(true)
       const currentChatMessages = getCurrentChatMessages()
-      // Converti i messaggi salvati nel formato richiesto da useChat
-      const formattedMessages = currentChatMessages.map(msg => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.content
-      }))
+      // Converti i messaggi salvati nel formato richiesto da useChat (senza i messaggi di errore per evitare confusione nell'AI)
+      const formattedMessages = currentChatMessages
+        .filter(msg => !msg.isError) // Filtra i messaggi di errore dal context dell'AI
+        .map(msg => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content
+        }))
       setMessages(formattedMessages)
       setIsLoadingMessages(false)
     }
@@ -319,6 +337,54 @@ export default function MCPChatClient() {
   // Verifica se l'API key del provider attuale è disponibile (localStorage o env)
   const currentApiKey = apiKeys[selectedProvider as keyof typeof apiKeys]
 
+  // Combina i messaggi da useChat con quelli salvati (inclusi gli errori) per la visualizzazione
+  const displayMessages = () => {
+    if (!currentChatId) return messages
+
+    const savedMessages = getCurrentChatMessages()
+    const liveMessages = messages
+    
+    // Se non ci sono messaggi salvati, mostra solo quelli live
+    if (savedMessages.length === 0) return liveMessages
+    
+    // Trova l'ultimo messaggio salvato che non sia un errore
+    const lastSavedNonErrorIndex = savedMessages.findLastIndex(msg => !msg.isError)
+    const lastSavedNonErrorId = lastSavedNonErrorIndex >= 0 ? savedMessages[lastSavedNonErrorIndex].id : null
+    
+    // Trova l'indice di questo messaggio nei messaggi live
+    const lastSavedInLiveIndex = lastSavedNonErrorId ? 
+      liveMessages.findIndex(msg => msg.id === lastSavedNonErrorId) : -1
+    
+    // Se abbiamo messaggi live più recenti dell'ultimo salvato, combinali
+    if (lastSavedInLiveIndex >= 0 && lastSavedInLiveIndex < liveMessages.length - 1) {
+      const newLiveMessages = liveMessages.slice(lastSavedInLiveIndex + 1)
+      return [
+        ...savedMessages.map(msg => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          isError: msg.isError
+        })),
+        ...newLiveMessages.map(msg => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          isError: false
+        }))
+      ]
+    }
+    
+    // Se tutti i messaggi live sono già salvati, mostra solo quelli salvati
+    return savedMessages.map(msg => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      isError: msg.isError
+    }))
+  }
+
+  const messagesToDisplay = displayMessages()
+
   return (
     <div className="flex h-screen bg-white">
       {/* Sidebar */}
@@ -369,7 +435,7 @@ export default function MCPChatClient() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-6">
           <div className="max-w-4xl mx-auto space-y-6">
-            {messages.length === 0 && !isLoading && !isLoadingMessages && (
+            {messagesToDisplay.length === 0 && !isLoading && !isLoadingMessages && (
               <div className="text-center mt-20">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Bot className="w-8 h-8 text-blue-600" />
@@ -418,27 +484,35 @@ export default function MCPChatClient() {
               </div>
             )}
 
-            {messages.map((message, i) => (
+            {messagesToDisplay.map((message: any, i: number) => (
               <div
                 key={message.id || i}
                 className={`flex gap-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {message.role === "assistant" && (
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-5 h-5 text-blue-600" />
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    message.isError ? "bg-red-100" : "bg-blue-100"
+                  }`}>
+                    <Bot className={`w-5 h-5 ${message.isError ? "text-red-600" : "text-blue-600"}`} />
                   </div>
                 )}
 
                 <div className={`flex-1 max-w-3xl ${message.role === "user" ? "order-first" : ""}`}>
                   <div
                     className={`rounded-2xl px-4 py-3 ${
-                      message.role === "user" ? "bg-blue-600 text-white ml-12" : "bg-white border border-gray-200"
+                      message.role === "user" 
+                        ? "bg-blue-600 text-white ml-12" 
+                        : message.isError 
+                          ? "bg-red-50 border border-red-200" 
+                          : "bg-white border border-gray-200"
                     }`}
                   >
                     {message.role === "user" ? (
                       <p className="whitespace-pre-wrap font-light">{message.content}</p>
                     ) : (
-                      <MessageContent content={message.content} />
+                      <div className={message.isError ? "text-red-700" : ""}>
+                        <MessageContent content={message.content} />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -462,24 +536,6 @@ export default function MCPChatClient() {
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span className="text-sm font-light">Archimede sta analizzando...</span>
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {error && (
-              <div className="flex gap-4 justify-start">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-red-600" />
-                </div>
-                <div className="max-w-3xl flex-1">
-                  <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
-                    <p className="text-sm text-red-700">
-                      <strong>Errore:</strong> {error.message}
-                    </p>
-                    <p className="text-xs text-red-600 mt-1">
-                      Verifica la tua API key {getProviderDisplayName()} nelle impostazioni o riprova più tardi.
-                    </p>
                   </div>
                 </div>
               </div>
