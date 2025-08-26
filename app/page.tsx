@@ -199,7 +199,6 @@ export default function MCPChatClient() {
     },
     onError: (error) => {
       console.error('Errore dettagliato nella chat:', error)
-      alert(`Errore: ${error.message}`)
     },
     onFinish: (message) => {
       // Salva il messaggio dell'assistant quando la risposta è completata
