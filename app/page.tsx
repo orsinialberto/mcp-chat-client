@@ -12,6 +12,8 @@ export default function MCPChatClient() {
   const [selectedModel, setSelectedModel] = useState("llama-3.1-8b-instant")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
+  const [isInitialized, setIsInitialized] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Carica API keys dal localStorage e variabili d'ambiente
@@ -50,6 +52,48 @@ export default function MCPChatClient() {
     }
   }, [])
 
+  // Inizializza la prima chat automaticamente
+  useEffect(() => {
+    if (!isInitialized) {
+      // Crea automaticamente la prima chat
+      const newChatId = createInitialChat()
+      setCurrentChatId(newChatId)
+      setIsInitialized(true)
+    }
+  }, [isInitialized])
+
+  // Funzione per creare la chat iniziale
+  const createInitialChat = (): string => {
+    const newChat = {
+      id: Date.now().toString(),
+      title: "Chat con Archimede",
+      createdAt: new Date(),
+      messageCount: 0,
+    }
+
+    // Carica chat esistenti e aggiungi la nuova
+    const savedChats = localStorage.getItem("mcp-chats")
+    let existingChats = []
+    
+    if (savedChats) {
+      try {
+        existingChats = JSON.parse(savedChats)
+      } catch (error) {
+        console.error("Errore caricamento chat esistenti:", error)
+      }
+    }
+
+    // Se non ci sono chat esistenti, crea la prima
+    if (existingChats.length === 0) {
+      const updatedChats = [newChat]
+      localStorage.setItem("mcp-chats", JSON.stringify(updatedChats))
+      return newChat.id
+    }
+
+    // Se ci sono già delle chat, usa la prima esistente
+    return existingChats[0].id
+  }
+
   // Usa useChat dall'AI SDK
   const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, error } = useChat({
     api: '/api/chat',
@@ -80,6 +124,18 @@ export default function MCPChatClient() {
 
   const clearMessages = () => {
     setMessages([])
+  }
+
+  const handleNewChat = () => {
+    clearMessages()
+    // Crea una nuova chat che verrà gestita dalla sidebar
+  }
+
+  const handleChatSelect = (chatId: string | null) => {
+    setCurrentChatId(chatId)
+    // Qui potresti caricare i messaggi della chat selezionata
+    // Per ora cancelliamo i messaggi per simulare il cambio chat
+    clearMessages()
   }
 
   // Gestisci cambio provider
@@ -116,9 +172,9 @@ export default function MCPChatClient() {
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
-        currentChatId={null}
-        onChatSelect={() => {}}
-        onNewChat={clearMessages}
+        currentChatId={currentChatId}
+        onChatSelect={handleChatSelect}
+        onNewChat={handleNewChat}
         selectedProvider={selectedProvider}
         selectedModel={selectedModel}
         onProviderChange={handleProviderChange}

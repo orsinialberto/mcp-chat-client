@@ -115,6 +115,35 @@ export function Sidebar({
     }
   }, [])
 
+  // Ascolta i cambiamenti al localStorage per aggiornare la lista delle chat
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedChats = localStorage.getItem("mcp-chats")
+      if (savedChats) {
+        try {
+          const parsedChats = JSON.parse(savedChats).map((chat: any) => ({
+            ...chat,
+            createdAt: new Date(chat.createdAt),
+          }))
+          setChats(parsedChats)
+        } catch (error) {
+          console.error("Errore caricamento chat:", error)
+        }
+      }
+    }
+
+    // Ascolta i cambiamenti al localStorage
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Controllo periodico per cambiamenti locali (stesso tab)
+    const interval = setInterval(handleStorageChange, 1000)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
+
   // Salva larghezza sidebar
   const saveSidebarWidth = (width: number) => {
     setSidebarWidth(width)
