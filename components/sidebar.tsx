@@ -14,7 +14,6 @@ import {
   Eye,
   EyeOff,
   Key,
-  Server,
 } from "lucide-react"
 
 interface Chat {
@@ -31,9 +30,7 @@ interface SidebarProps {
   currentChatId: string | null
   onChatSelect: (chatId: string | null) => void
   onNewChat: () => void
-  selectedProvider: string
   selectedModel: string
-  onProviderChange: (provider: string) => void
   onModelChange: (model: string) => void
   mcpServerUrl: string
   onMcpServerUrlChange: (url: string) => void
@@ -47,9 +44,7 @@ export function Sidebar({
   currentChatId,
   onChatSelect,
   onNewChat,
-  selectedProvider,
   selectedModel,
-  onProviderChange,
   onModelChange,
   mcpServerUrl,
   onMcpServerUrlChange,
@@ -66,28 +61,12 @@ export function Sidebar({
   const [isResizing, setIsResizing] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
 
-  // Stati per i token API
-  const [apiKeys, setApiKeys] = useState({
-    openai: "",
-    anthropic: "",
-    groq: "",
-  })
-  const [showApiKeys, setShowApiKeys] = useState({
-    openai: false,
-    anthropic: false,
-    groq: false,
-  })
-  const [apiKeyStatus, setApiKeyStatus] = useState({
-    openai: "unknown",
-    anthropic: "unknown",
-    groq: "unknown",
-  })
+  // Stati per l'API key Groq
+  const [apiKey, setApiKey] = useState("")
+  const [showApiKey, setShowApiKey] = useState(false)
+  const [apiKeyStatus, setApiKeyStatus] = useState<'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error'>('unknown')
 
-  // Stati per Ollama
-  const [ollamaStatus, setOllamaStatus] = useState<'unknown' | 'connected' | 'disconnected' | 'testing'>('unknown')
-  const [ollamaModels, setOllamaModels] = useState<string[]>([])
-
-  // Carica chat, API keys e larghezza sidebar dal localStorage
+  // Carica chat, API key e larghezza sidebar dal localStorage
   useEffect(() => {
     const savedChats = localStorage.getItem("mcp-chats")
     if (savedChats) {
@@ -102,15 +81,10 @@ export function Sidebar({
       }
     }
 
-    // Carica API keys salvate
-    const savedApiKeys = localStorage.getItem("mcp-api-keys")
-    if (savedApiKeys) {
-      try {
-        const parsedKeys = JSON.parse(savedApiKeys)
-        setApiKeys(parsedKeys)
-      } catch (error) {
-        console.error("Errore caricamento API keys:", error)
-      }
+    // Carica API key salvata
+    const savedApiKey = localStorage.getItem("mcp-groq-api-key")
+    if (savedApiKey) {
+      setApiKey(savedApiKey)
     }
 
     // Carica larghezza sidebar salvata
@@ -121,37 +95,7 @@ export function Sidebar({
         setSidebarWidth(width)
       }
     }
-
-    // Testa connessione Ollama all'avvio se selezionato
-    if (selectedProvider === 'ollama') {
-      testOllamaConnection()
-    }
   }, [])
-
-  // Testa connessione Ollama
-  const testOllamaConnection = async () => {
-    setOllamaStatus('testing')
-    try {
-      const response = await fetch('http://localhost:11434/api/tags')
-      if (response.ok) {
-        const data = await response.json()
-        const modelNames = data.models?.map((model: any) => model.name) || []
-        setOllamaModels(modelNames)
-        setOllamaStatus('connected')
-        
-        // Se non c'è un modello selezionato e ci sono modelli disponibili, seleziona il primo
-        if (!selectedModel && modelNames.length > 0) {
-          onModelChange(modelNames[0])
-        }
-      } else {
-        setOllamaStatus('disconnected')
-        setOllamaModels([])
-      }
-    } catch (error) {
-      setOllamaStatus('disconnected')
-      setOllamaModels([])
-    }
-  }
 
   // Salva larghezza sidebar
   const saveSidebarWidth = (width: number) => {
@@ -192,50 +136,46 @@ export function Sidebar({
     }
   }, [isResizing])
 
-  // Salva API keys nel localStorage
-  const saveApiKeys = (newKeys: typeof apiKeys) => {
-    setApiKeys(newKeys)
-    localStorage.setItem("mcp-api-keys", JSON.stringify(newKeys))
+  // Salva API key nel localStorage
+  const saveApiKey = (key: string) => {
+    setApiKey(key)
+    localStorage.setItem("mcp-groq-api-key", key)
   }
 
   // Testa validità API key
-  const testApiKey = async (provider: string, apiKey: string) => {
-    if (!apiKey.trim()) {
-      setApiKeyStatus((prev) => ({ ...prev, [provider]: "empty" }))
+  const testApiKey = async (key: string) => {
+    if (!key.trim()) {
+      setApiKeyStatus("empty")
       return
     }
 
-    setApiKeyStatus((prev) => ({ ...prev, [provider]: "testing" }))
+    setApiKeyStatus("testing")
 
     try {
       const response = await fetch("/api/test-api-key", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, apiKey }),
+        body: JSON.stringify({ provider: "groq", apiKey: key }),
       })
 
       const result = await response.json()
-      setApiKeyStatus((prev) => ({
-        ...prev,
-        [provider]: result.valid ? "valid" : "invalid",
-      }))
+      setApiKeyStatus(result.valid ? "valid" : "invalid")
     } catch (error) {
-      setApiKeyStatus((prev) => ({ ...prev, [provider]: "error" }))
+      setApiKeyStatus("error")
     }
   }
 
   // Gestisci cambio API key
-  const handleApiKeyChange = (provider: string, value: string) => {
-    const newKeys = { ...apiKeys, [provider]: value }
-    saveApiKeys(newKeys)
+  const handleApiKeyChange = (value: string) => {
+    saveApiKey(value)
 
     // Reset status quando si modifica la key
-    setApiKeyStatus((prev) => ({ ...prev, [provider]: "unknown" }))
+    setApiKeyStatus("unknown")
 
     // Testa automaticamente dopo 1 secondo di inattività
     setTimeout(() => {
-      if (newKeys[provider as keyof typeof newKeys] === value) {
-        testApiKey(provider, value)
+      if (apiKey === value) {
+        testApiKey(value)
       }
     }, 1000)
   }
@@ -302,44 +242,9 @@ export function Sidebar({
     onNewChat()
   }
 
-  // Gestisci cambio provider
-  const handleProviderChange = (provider: string) => {
-    onProviderChange(provider)
-    
-    // Imposta modelli di default per ogni provider
-    const defaultModels = {
-      openai: "gpt-4o",
-      anthropic: "claude-3-5-sonnet-20241022",
-      groq: "llama-3.1-8b-instant",
-      ollama: ollamaModels.length > 0 ? ollamaModels[0] : "llama2:latest"
-    }
-    
-    onModelChange(defaultModels[provider as keyof typeof defaultModels])
-    
-    // Se si seleziona Ollama, testa la connessione
-    if (provider === 'ollama') {
-      testOllamaConnection()
-    }
-  }
-
-  // Ottieni placeholder per API key
-  const getApiKeyPlaceholder = (provider: string) => {
-    switch (provider) {
-      case "openai":
-        return "sk-..."
-      case "anthropic":
-        return "sk-ant-..."
-      case "groq":
-        return "gsk_..."
-      default:
-        return "Inserisci API key"
-    }
-  }
-
   // Ottieni status icon per API key
-  const getStatusIcon = (provider: string) => {
-    const status = apiKeyStatus[provider as keyof typeof apiKeyStatus]
-    switch (status) {
+  const getStatusIcon = () => {
+    switch (apiKeyStatus) {
       case "valid":
         return <div className="w-2 h-2 bg-green-500 rounded-full" />
       case "invalid":
@@ -353,9 +258,8 @@ export function Sidebar({
   }
 
   // Ottieni messaggio di status
-  const getStatusMessage = (provider: string) => {
-    const status = apiKeyStatus[provider as keyof typeof apiKeyStatus]
-    switch (status) {
+  const getStatusMessage = () => {
+    switch (apiKeyStatus) {
       case "valid":
         return "API key valida"
       case "invalid":
@@ -368,34 +272,6 @@ export function Sidebar({
         return "API key richiesta"
       default:
         return "Non verificata"
-    }
-  }
-
-  // Ottieni status icon per Ollama
-  const getOllamaStatusIcon = () => {
-    switch (ollamaStatus) {
-      case "connected":
-        return <div className="w-2 h-2 bg-green-500 rounded-full" />
-      case "disconnected":
-        return <div className="w-2 h-2 bg-red-500 rounded-full" />
-      case "testing":
-        return <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-      default:
-        return <div className="w-2 h-2 bg-gray-300 rounded-full" />
-    }
-  }
-
-  // Ottieni messaggio di status per Ollama
-  const getOllamaStatusMessage = () => {
-    switch (ollamaStatus) {
-      case "connected":
-        return `Connesso (${ollamaModels.length} modelli)`
-      case "disconnected":
-        return "Non connesso"
-      case "testing":
-        return "Verifica connessione..."
-      default:
-        return "Non verificato"
     }
   }
 
@@ -541,180 +417,48 @@ export function Sidebar({
 
           {showSettings && (
             <div className="mt-3 space-y-5">
-              {/* Provider Selection */}
+              {/* API Key Input */}
               <div>
                 <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-3">
-                  Provider AI
+                  <Key className="w-3 h-3 inline mr-1" />
+                  API Key Groq
                 </label>
-                <div className="relative">
-                  <select
-                    value={selectedProvider}
-                    onChange={(e) => handleProviderChange(e.target.value)}
-                    className="w-full px-4 py-3 text-sm font-light text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer transition-all duration-200 hover:border-gray-300 hover:shadow-sm"
-                    style={{
-                      fontFamily: "Raleway, sans-serif",
-                      fontWeight: "300",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    <option
-                      value="ollama"
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        padding: "12px 16px",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      Ollama (Locale)
-                    </option>
-                    <option
-                      disabled
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        color: "#9CA3AF",
-                        fontSize: "11px",
-                        padding: "8px 16px",
-                      }}
-                    >
-                      ────────────────────
-                    </option>
-                    <option
-                      value="groq"
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        padding: "12px 16px",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      Groq (Gratuito)
-                    </option>
-                    <option
-                      disabled
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        color: "#9CA3AF",
-                        fontSize: "11px",
-                        padding: "8px 16px",
-                      }}
-                    >
-                      ────────────────────
-                    </option>
-                    <option
-                      value="openai"
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        padding: "12px 16px",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      OpenAI
-                    </option>
-                    <option
-                      value="anthropic"
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        padding: "12px 16px",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      Anthropic
-                    </option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* API Key Input or Ollama Status */}
-              {selectedProvider === 'ollama' ? (
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-3">
-                    <Server className="w-3 h-3 inline mr-1" />
-                    Ollama (Locale)
-                  </label>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <div className="flex items-center gap-2">
-                        {getOllamaStatusIcon()}
-                        <span className="text-sm font-light text-gray-700">
-                          {getOllamaStatusMessage()}
-                        </span>
-                      </div>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? "text" : "password"}
+                      value={apiKey}
+                      onChange={(e) => handleApiKeyChange(e.target.value)}
+                      placeholder="gsk_..."
+                      className="w-full px-4 py-3 pr-20 text-sm font-light text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-all duration-200 hover:border-gray-300"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-3">
+                      {getStatusIcon()}
                       <button
-                        onClick={testOllamaConnection}
-                        className="text-xs font-normal text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                       >
-                        Ricarica
+                        {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    <p className="text-xs font-light text-gray-500">
-                      Assicurati che Ollama sia in esecuzione su localhost:11434
-                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-light text-gray-500">{getStatusMessage()}</span>
+                    {apiKey && (
+                      <button
+                        onClick={() => testApiKey(apiKey)}
+                        className="text-xs font-normal text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                      >
+                        Verifica
+                      </button>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-3">
-                    <Key className="w-3 h-3 inline mr-1" />
-                    API Key {selectedProvider}
-                  </label>
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <input
-                        type={showApiKeys[selectedProvider as keyof typeof showApiKeys] ? "text" : "password"}
-                        value={apiKeys[selectedProvider as keyof typeof apiKeys]}
-                        onChange={(e) => handleApiKeyChange(selectedProvider, e.target.value)}
-                        placeholder={getApiKeyPlaceholder(selectedProvider)}
-                        className="w-full px-4 py-3 pr-20 text-sm font-light text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-all duration-200 hover:border-gray-300"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-3">
-                        {getStatusIcon(selectedProvider)}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowApiKeys((prev) => ({
-                              ...prev,
-                              [selectedProvider]: !prev[selectedProvider as keyof typeof prev],
-                            }))
-                          }
-                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          {showApiKeys[selectedProvider as keyof typeof showApiKeys] ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-light text-gray-500">{getStatusMessage(selectedProvider)}</span>
-                      {apiKeys[selectedProvider as keyof typeof apiKeys] && (
-                        <button
-                          onClick={() => testApiKey(selectedProvider, apiKeys[selectedProvider as keyof typeof apiKeys])}
-                          className="text-xs font-normal text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
-                        >
-                          Verifica
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-xs font-light text-gray-500 mt-2">
-                    {selectedProvider === "groq" && "Registrati gratuitamente su console.groq.com"}
-                    {selectedProvider === "openai" && "Ottieni la tua API key da platform.openai.com"}
-                    {selectedProvider === "anthropic" && "Ottieni la tua API key da console.anthropic.com"}
-                  </p>
-                </div>
-              )}
+                <p className="text-xs font-light text-gray-500 mt-2">
+                  Registrati gratuitamente su console.groq.com
+                </p>
+              </div>
 
               {/* Model Selection */}
               <div>
@@ -730,174 +474,51 @@ export function Sidebar({
                       lineHeight: "1.5",
                     }}
                   >
-                    {selectedProvider === "ollama" && (
-                      <>
-                        {ollamaModels.length > 0 ? (
-                          ollamaModels.map((model, index) => (
-                            <option
-                              key={model}
-                              value={model}
-                              style={{
-                                fontFamily: "Raleway, sans-serif",
-                                fontWeight: "300",
-                                padding: "12px 16px",
-                                lineHeight: "1.5",
-                              }}
-                            >
-                              {model} {index === 0 ? "(Consigliato)" : ""}
-                            </option>
-                          ))
-                        ) : (
-                          <option
-                            value="llama2:latest"
-                            style={{
-                              fontFamily: "Raleway, sans-serif",
-                              fontWeight: "300",
-                              padding: "12px 16px",
-                              lineHeight: "1.5",
-                            }}
-                          >
-                            Nessun modello trovato
-                          </option>
-                        )}
-                      </>
-                    )}
-                    {selectedProvider === "openai" && (
-                      <>
-                        <option
-                          value="gpt-4o"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          GPT-4o (Consigliato)
-                        </option>
-                        <option
-                          disabled
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            color: "#9CA3AF",
-                            fontSize: "11px",
-                            padding: "8px 16px",
-                          }}
-                        >
-                          ────────────────────
-                        </option>
-                        <option
-                          value="gpt-4o-mini"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          GPT-4o Mini
-                        </option>
-                        <option
-                          value="gpt-4-turbo"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          GPT-4 Turbo
-                        </option>
-                      </>
-                    )}
-                    {selectedProvider === "anthropic" && (
-                      <>
-                        <option
-                          value="claude-3-5-sonnet-20241022"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          Claude 3.5 Sonnet
-                        </option>
-                        <option
-                          disabled
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            color: "#9CA3AF",
-                            fontSize: "11px",
-                            padding: "8px 16px",
-                          }}
-                        >
-                          ────────────────────
-                        </option>
-                        <option
-                          value="claude-3-5-haiku-20241022"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          Claude 3.5 Haiku
-                        </option>
-                        <option
-                          value="claude-3-opus-20240229"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          Claude 3 Opus
-                        </option>
-                      </>
-                    )}
-                    {selectedProvider === "groq" && (
-                      <>
-                        <option
-                          value="llama-3.1-8b-instant"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          Llama 3.1 8B
-                        </option>
-                        <option
-                          disabled
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            color: "#9CA3AF",
-                            fontSize: "11px",
-                            padding: "8px 16px",
-                          }}
-                        >
-                          ────────────────────
-                        </option>
-                        <option
-                          value="mixtral-8x7b-32768"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          Mixtral 8x7B
-                        </option>
-                      </>
-                    )}
+                    <option
+                      value="llama-3.1-8b-instant"
+                      style={{
+                        fontFamily: "Raleway, sans-serif",
+                        fontWeight: "300",
+                        padding: "12px 16px",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      Llama 3.1 8B (Consigliato)
+                    </option>
+                    <option
+                      disabled
+                      style={{
+                        fontFamily: "Raleway, sans-serif",
+                        fontWeight: "300",
+                        color: "#9CA3AF",
+                        fontSize: "11px",
+                        padding: "8px 16px",
+                      }}
+                    >
+                      ────────────────────
+                    </option>
+                    <option
+                      value="mixtral-8x7b-32768"
+                      style={{
+                        fontFamily: "Raleway, sans-serif",
+                        fontWeight: "300",
+                        padding: "12px 16px",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      Mixtral 8x7B
+                    </option>
+                    <option
+                      value="llama-3.1-70b-versatile"
+                      style={{
+                        fontFamily: "Raleway, sans-serif",
+                        fontWeight: "300",
+                        padding: "12px 16px",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      Llama 3.1 70B (Più potente)
+                    </option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

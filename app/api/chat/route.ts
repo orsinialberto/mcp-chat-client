@@ -1,7 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
 import { groq } from "@ai-sdk/groq";
-import { openai } from "@ai-sdk/openai";
-import { ollama } from "ollama-ai-provider"; 
 import { experimental_createMCPClient, streamText } from 'ai';
 import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio';
@@ -76,7 +73,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     console.log("📥 Body ricevuto:", JSON.stringify(body, null, 2))
 
-    const { messages, mcpServerUrl, provider = "groq", model: selectedModel, apiKeys } = body
+    const { messages, model: selectedModel, apiKey } = body
 
     if (!messages || !Array.isArray(messages)) {
       console.error("❌ Messaggi non validi:", messages)
@@ -87,83 +84,26 @@ export async function POST(req: Request) {
     }
 
     console.log("📝 Messaggi da processare:", messages.length)
-    console.log("🤖 Provider selezionato:", provider)
     console.log("🎯 Modello selezionato:", selectedModel)
-    console.log("🔗 MCP Server URL:", mcpServerUrl)
 
-    // Configurazione modelli per provider
-    let model
-    let providerName = ""
-
-    switch (provider) {
-      case "openai":
-        const openaiKey = apiKeys?.openai || process.env.OPENAI_API_KEY
-        if (!openaiKey) {
-          return new Response(
-            JSON.stringify({
-              error: "API Key OpenAI non configurata",
-              details:
-                "Inserisci la tua API key OpenAI nelle impostazioni o aggiungi OPENAI_API_KEY nel file .env.local",
-            }),
-            { status: 500, headers: { "Content-Type": "application/json" } },
-          )
-        }
-        model = openai(selectedModel || "gpt-4o", { apiKey: openaiKey })
-        providerName = "OpenAI"
-        break
-
-      case "anthropic":
-        const anthropicKey = apiKeys?.anthropic || process.env.ANTHROPIC_API_KEY
-        if (!anthropicKey) {
-          return new Response(
-            JSON.stringify({
-              error: "API Key Anthropic non configurata",
-              details:
-                "Inserisci la tua API key Anthropic nelle impostazioni o aggiungi ANTHROPIC_API_KEY nel file .env.local",
-            }),
-            { status: 500, headers: { "Content-Type": "application/json" } },
-          )
-        }
-        model = anthropic(selectedModel || "claude-3-5-sonnet-20241022", { apiKey: anthropicKey })
-        providerName = "Anthropic"
-        break
-
-      case "groq":
-        const groqKey = apiKeys?.groq || process.env.GROQ_API_KEY
-        if (!groqKey) {
-          return new Response(
-            JSON.stringify({
-              error: "API Key Groq non configurata",
-              details: "Inserisci la tua API key Groq nelle impostazioni o aggiungi GROQ_API_KEY nel file .env.local.",
-            }),
-            { status: 500, headers: { "Content-Type": "application/json" } },
-          )
-        }
-        model = groq("llama-3.1-8b-instant", { 
-          apiKey: groqKey,
-          tools: true 
-        })
-        providerName = "Groq"
-        break
-
-      case "ollama":
-        model = ollama('llama2:latest', {
-          simulateStreaming: true,
-        });
-        providerName = "Ollama"
-        break
-
-      default:
-        return new Response(
-          JSON.stringify({
-            error: "Provider non supportato",
-            details: `Provider '${provider}' non riconosciuto. Usa: openai, anthropic, groq`,
-          }),
-          { status: 400, headers: { "Content-Type": "application/json" } },
-        )
+    // Verifica API key Groq
+    const groqKey = apiKey || process.env.GROQ_API_KEY
+    if (!groqKey) {
+      return new Response(
+        JSON.stringify({
+          error: "API Key Groq non configurata",
+          details: "Inserisci la tua API key Groq nelle impostazioni o aggiungi GROQ_API_KEY nel file .env.local.",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      )
     }
 
-    console.log(`✅ ${providerName} configurato correttamente`)
+    const model = groq(selectedModel || "llama-3.1-8b-instant", { 
+      apiKey: groqKey,
+      tools: true 
+    })
+
+    console.log("✅ Groq configurato correttamente")
 
     // Definisci gli strumenti MCP se il server è connesso
     let tools = {}
@@ -197,7 +137,7 @@ export async function POST(req: Request) {
 
     console.log("💭 System message aggiunto")
     console.log("🛠️ Tools configurati:", Object.keys(tools))
-    console.log("🔄 Chiamata a generateText...")
+    console.log("🔄 Chiamata a streamText...")
 
     const response = await streamText({
       model,
@@ -208,7 +148,7 @@ export async function POST(req: Request) {
       maxTokens: 8000,
     });
 
-    console.log("✅ generateText completato, restituendo risposta")
+    console.log("✅ streamText completato, restituendo risposta")
 
     return response.toDataStreamResponse();
 
