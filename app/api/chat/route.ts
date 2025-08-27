@@ -1,7 +1,6 @@
 import { groq } from "@ai-sdk/groq";
 import { anthropic } from "@ai-sdk/anthropic";
 import { experimental_createMCPClient, streamText } from 'ai';
-import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio';
 
 // System prompt specifico per mostrare TUTTI i tenant
@@ -106,10 +105,8 @@ export async function POST(req: Request) {
 
     // Riutilizza l'istanza del client MCP se esiste, altrimenti la crea
     if (!mcpClientInstance) {
-      mcpClientInstance = await experimental_createMCPClient({
-        transport
-      })
-      console.log("🔗 Client MCP creato per la prima volta")
+      mcpClientInstance = await experimental_createMCPClient({transport})
+      console.log("� Client MCP creato per la prima volta")
     }
 
     // Riutilizza gli strumenti se esistono, altrimenti li recupera
