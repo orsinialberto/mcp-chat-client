@@ -33,42 +33,7 @@ export default function MCPChatClient() {
   const [savedChats, setSavedChats] = useState<SavedChat[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Carica API keys dal localStorage e variabili d'ambiente
-  const [apiKeys, setApiKeys] = useState({ groq: "", anthropic: "" })
-
-  useEffect(() => {
-    // Prima prova a caricare dal localStorage
-    const savedApiKeys = localStorage.getItem("mcp-api-keys")
-    let loadedKeys = { groq: "", anthropic: "" }
-    
-    if (savedApiKeys) {
-      try {
-        loadedKeys = JSON.parse(savedApiKeys)
-      } catch (error) {
-        console.error("Errore caricamento API keys:", error)
-      }
-    }
-
-    // Se non ci sono chiavi nel localStorage, cerca nelle variabili d'ambiente tramite API
-    if (!loadedKeys.groq && !loadedKeys.anthropic) {
-      fetch('/api/debug/env')
-        .then(res => res.json())
-        .then(data => {
-          const envKeys = {
-            groq: data.hasGroq ? "env" : "", // Placeholder per indicare che c'è una key nell'env
-            anthropic: data.hasAnthropic ? "env" : ""
-          }
-          setApiKeys(envKeys)
-        })
-        .catch(error => {
-          console.error("Errore verifica variabili d'ambiente:", error)
-          setApiKeys(loadedKeys)
-        })
-    } else {
-      setApiKeys(loadedKeys)
-    }
-  }, [])
+  const apiKeys = useState({ groq: "", anthropic: "" })
 
   // Carica le chat salvate
   useEffect(() => {
@@ -192,7 +157,7 @@ export default function MCPChatClient() {
   }
 
   // Usa useChat dall'AI SDK
-  const { messages, input, handleInputChange, append, isLoading, setMessages, error } = useChat({
+  const { messages, input, handleInputChange, append, isLoading, setMessages } = useChat({
     api: '/api/chat',
     body: {
       provider: selectedProvider,

@@ -84,7 +84,10 @@ export async function POST(req: Request) {
             { status: 500, headers: { "Content-Type": "application/json" } },
           )
         }
-        model = anthropic(selectedModel || "claude-3-5-sonnet-20241022", { apiKey: anthropicKey })
+        model = anthropic(selectedModel || "claude-3-5-sonnet-20241022", { 
+          apiKey: anthropicKey,
+          tools: true
+        })
         providerName = "Anthropic"
         break
 
