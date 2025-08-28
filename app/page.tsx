@@ -548,24 +548,17 @@ export default function MCPChatClient() {
         {/* Input */}
         <div className="border-t border-gray-100 p-4 bg-white">
           <div className="max-w-4xl mx-auto">
-            {!currentApiKey && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                  <strong>API Key mancante:</strong> Configura la tua API key {getProviderDisplayName()} nelle impostazioni per iniziare a chattare.
-                </p>
-              </div>
-            )}
             <form onSubmit={handleSubmit} className="relative">
               <input
                 value={input}
                 onChange={handleInputChange}
-                placeholder={currentApiKey ? "Scrivi la tua domanda su segmentazione..." : "Configura prima l'API key nelle impostazioni"}
-                disabled={isLoading || !currentApiKey}
+                placeholder={currentApiKey ? "Scrivi la tua domanda su segmentazione..." : "Scrivi la tua domanda (configura prima l'API key per ricevere risposte)"}
+                disabled={isLoading}
                 className="w-full px-4 py-3 pr-12 font-light border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50 placeholder-gray-400"
               />
               <button
                 type="submit"
-                disabled={isLoading || !input.trim() || !currentApiKey}
+                disabled={isLoading || !input.trim()}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:hover:text-gray-400"
               >
                 {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}

@@ -74,12 +74,12 @@ export async function POST(req: Request) {
         break
 
       case "anthropic":
-        const anthropicKey = apiKey || process.env.ANTHROPIC_API_KEY
+        const anthropicKey = apiKey || process.env.TEST_API_KEY
         if (!anthropicKey) {
           return new Response(
             JSON.stringify({
               error: "API Key Anthropic non configurata",
-              details: "Inserisci la tua API key Anthropic nelle impostazioni o aggiungi ANTHROPIC_API_KEY nel file .env.local",
+              details: "Inserisci la tua API key Anthropic nelle impostazioni o aggiungi TEST_API_KEY nel file .env.local",
             }),
             { status: 500, headers: { "Content-Type": "application/json" } },
           )

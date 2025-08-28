@@ -138,8 +138,6 @@ GROQ_API_KEY="gsk_..."
 # Anthropic API Key
 ANTHROPIC_API_KEY="sk-ant-..."
 
-# Google AI Studio API Key
-GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
 ```
 
 ### Server MCP Esterno
