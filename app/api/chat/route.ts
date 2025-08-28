@@ -1,5 +1,5 @@
 import { groq } from "@ai-sdk/groq";
-import { anthropic } from "@ai-sdk/anthropic";
+import { createAnthropic } from '@ai-sdk/anthropic';
 import { experimental_createMCPClient, streamText } from 'ai';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio';
 
@@ -84,10 +84,11 @@ export async function POST(req: Request) {
             { status: 500, headers: { "Content-Type": "application/json" } },
           )
         }
-        model = anthropic(selectedModel || "claude-3-5-sonnet-20241022", { 
-          apiKey: anthropicKey,
-          tools: true
-        })
+        const anthropicClient = createAnthropic({
+          apiKey: anthropicKey
+        });
+
+        model = anthropicClient(selectedModel || "claude-3-5-sonnet-20241022");
         providerName = "Anthropic"
         break
 
@@ -135,13 +136,16 @@ export async function POST(req: Request) {
     console.log("🛠️ Tools configurati:", Object.keys(tools))
     console.log("🔄 Chiamata a streamText...")
 
-    const response = await streamText({
+    const response = streamText({
       model,
       tools,
       messages: allMessages,
       maxSteps: 3,
       temperature: 0.1,
       maxTokens: 8000,
+      onError({ error }) {
+        console.error(error); // your error logging logic here
+      },
     });
 
     console.log("✅ streamText completato, restituendo risposta")
