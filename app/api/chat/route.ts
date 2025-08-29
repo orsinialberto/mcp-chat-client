@@ -1,7 +1,7 @@
 import { groq } from "@ai-sdk/groq";
 import { createAnthropic } from '@ai-sdk/anthropic';
-import { experimental_createMCPClient, streamText } from 'ai';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio';
+import { streamText } from 'ai';
+import { MCPSingleton, MCPLogger } from '@/lib/mcp';
 
 // System prompt specifico per mostrare TUTTI i tenant
 const SYSTEM_PROMPT = `Sei Archimede, assistente AI per segmentazione Marketing Cloud.
@@ -10,45 +10,26 @@ STILE: Linguaggio semplice, step-by-step, risposte actionable.
 STRUTTURA: Obiettivo → Criteri → Implementazione → Metriche.
 Priorità: sicurezza dati, conformità normative, backup sempre.`;
 
-// Inizializza il transport una sola volta a livello globale
-const transport = new StdioClientTransport({
-  command: '/usr/lib/jvm/temurin-17-jdk-amd64/bin/java',
-  args: [
-    '-Dspring.ai.mcp.server.transport=STDIO',
-    '-jar',
-    '/home/alberto_orsini_linux/dev/albe/plan-segment-assistant/plan-segment-assistant/target/plan-segment-assistant-0.0.1-SNAPSHOT.jar'
-  ],
-  timeout: 30000, // 30 secondi
-  keepAlive: true,
-  onStderr: (chunk) => {
-    console.error('[MCP SERVER STDERR]', chunk.toString());
-  },
-});
-
-// Inizializza il client MCP una sola volta
-let mcpClientInstance: any = null;
-let mcpToolsInstance: any = null;
+// Il sistema MCP è ora gestito dal singleton - nessuna variabile globale necessaria
 
 export async function POST(req: Request) {
-  console.log("🚀 API Chat chiamata")
+  MCPLogger.info("🚀 API Chat chiamata")
 
   try {
     const body = await req.json()
-    console.log("📥 Body ricevuto:", JSON.stringify(body, null, 2))
+    MCPLogger.debug("📥 Body ricevuto:", body)
 
     const { messages, provider = "groq", model: selectedModel, apiKey } = body
 
     if (!messages || !Array.isArray(messages)) {
-      console.error("❌ Messaggi non validi:", messages)
+      MCPLogger.error("❌ Messaggi non validi:", messages)
       return new Response(JSON.stringify({ error: "Messaggi non validi" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       })
     }
 
-    console.log("📝 Messaggi da processare:", messages.length)
-    console.log("🤖 Provider selezionato:", provider)
-    console.log("🎯 Modello selezionato:", selectedModel)
+    MCPLogger.info("📝 Messaggi da processare:", { count: messages.length, provider, model: selectedModel })
 
     // Configurazione modello basata sul provider
     let model
@@ -66,9 +47,8 @@ export async function POST(req: Request) {
             { status: 500, headers: { "Content-Type": "application/json" } },
           )
         }
-        model = groq(selectedModel || "llama-3.1-8b-instant", { 
-          apiKey: groqKey,
-          tools: true 
+        model = groq(selectedModel || "llama-3.1-8b-instant", {
+          apiKey: groqKey
         })
         providerName = "Groq"
         break
@@ -102,26 +82,30 @@ export async function POST(req: Request) {
         )
     }
 
-    console.log(`✅ ${providerName} configurato correttamente`)
+    MCPLogger.info(`✅ ${providerName} configurato correttamente`)
 
-    // Definisci gli strumenti MCP se il server è connesso
+    // Ottieni gli strumenti MCP tramite il singleton (con gestione automatica della connessione)
     let tools = {}
-
-    // Riutilizza l'istanza del client MCP se esiste, altrimenti la crea
-    if (!mcpClientInstance) {
-      mcpClientInstance = await experimental_createMCPClient({transport})
-      console.log("� Client MCP creato per la prima volta")
-    }
-
-    // Riutilizza gli strumenti se esistono, altrimenti li recupera
-    if (!mcpToolsInstance) {
-      mcpToolsInstance = await mcpClientInstance.tools()
-      console.log("🛠️ Strumenti MCP recuperati per la prima volta:", Object.keys(mcpToolsInstance))
-    }
     
-    tools = mcpToolsInstance
-
-    console.log("🛠️ Strumenti MCP recuperati:", Object.keys(tools))
+    try {
+      const mcpSingleton = MCPSingleton.getInstance()
+      tools = await mcpSingleton.getTools()
+      
+      const toolNames = Object.keys(tools)
+      MCPLogger.info("🛠️ Strumenti MCP recuperati tramite singleton", {
+        toolCount: toolNames.length,
+        tools: toolNames
+      })
+      
+      // Log dello stato della connessione per debugging
+      const connectionStatus = mcpSingleton.getConnectionStatus()
+      MCPLogger.debug("📊 Stato connessione MCP", connectionStatus)
+      
+    } catch (error) {
+      MCPLogger.error("❌ Errore recupero strumenti MCP", error)
+      // Continua senza tools MCP in caso di errore
+      tools = {}
+    }
 
     // Prepara i messaggi con system prompt
     const systemMessage = {
@@ -132,9 +116,9 @@ export async function POST(req: Request) {
     // Combina system message con i messaggi dell'utente
     const allMessages = [systemMessage, ...messages];
 
-    console.log("💭 System message aggiunto")
-    console.log("🛠️ Tools configurati:", Object.keys(tools))
-    console.log("🔄 Chiamata a streamText...")
+    MCPLogger.debug("💭 System message aggiunto")
+    MCPLogger.info("🛠️ Tools configurati per streamText", { toolCount: Object.keys(tools).length })
+    MCPLogger.debug("🔄 Chiamata a streamText...")
 
     const response = streamText({
       model,
@@ -144,23 +128,22 @@ export async function POST(req: Request) {
       temperature: 0.1,
       maxTokens: 8000,
       onError({ error }) {
-        console.error(error); // your error logging logic here
+        MCPLogger.error("Errore in streamText", error);
       },
     });
 
-    console.log("✅ streamText completato, restituendo risposta")
+    MCPLogger.info("✅ streamText completato, restituendo risposta")
 
     return response.toDataStreamResponse();
 
   } catch (error) {
-    console.error("❌ Errore nella chat:", error)
-    console.error("Stack trace:", error.stack)
+    MCPLogger.error("❌ Errore nella chat:", error)
 
     return new Response(
       JSON.stringify({
         error: "Errore interno del server",
-        details: error.message,
-        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+        details: error instanceof Error ? error.message : "Errore sconosciuto",
+        stack: process.env.NODE_ENV === "development" && error instanceof Error ? error.stack : undefined,
       }),
       {
         status: 500,
