@@ -2,7 +2,7 @@
 
 import { Bot, Loader2, Menu, MessageSquare, Send, User } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { useChat } from '@ai-sdk/react'
+import { useChat } from 'ai/react'
 import { MessageContent } from "@/components/message-content"
 import { Sidebar } from "@/components/sidebar"
 
@@ -33,7 +33,7 @@ export default function MCPChatClient() {
   const [savedChats, setSavedChats] = useState<SavedChat[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const apiKeys = useState({ groq: "", anthropic: "" })
+  const apiKeys = useState({ groq: "", anthropic: "", gemini: "" })
 
   // Carica le chat salvate
   useEffect(() => {
@@ -275,6 +275,7 @@ export default function MCPChatClient() {
     const defaultModels = {
       groq: "llama-3.1-8b-instant",
       anthropic: "claude-3-5-sonnet-20241022",
+      gemini: "gemini-2.0-flash-exp",
     }
     
     setSelectedModel(defaultModels[provider as keyof typeof defaultModels])
@@ -287,6 +288,8 @@ export default function MCPChatClient() {
         return "Groq"
       case "anthropic":
         return "Anthropic"
+      case "gemini":
+        return "Google Gemini"
       default:
         return selectedProvider
     }
@@ -523,7 +526,7 @@ export default function MCPChatClient() {
               />
               <button
                 type="submit"
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || !input?.trim()}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:hover:text-gray-400"
               >
                 {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}

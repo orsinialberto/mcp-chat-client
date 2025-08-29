@@ -72,18 +72,21 @@ export function Sidebar({
   const [isResizing, setIsResizing] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
 
-  // Stati per API keys dei due provider
+  // Stati per API keys dei tre provider
   const [apiKeys, setApiKeys] = useState({
     groq: "",
     anthropic: "",
+    gemini: "",
   })
   const [showApiKeys, setShowApiKeys] = useState({
     groq: false,
     anthropic: false,
+    gemini: false,
   })
   const [apiKeyStatus, setApiKeyStatus] = useState({
     groq: 'unknown' as 'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error',
     anthropic: 'unknown' as 'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error',
+    gemini: 'unknown' as 'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error',
   })
 
   // Carica chat, API keys e larghezza sidebar dal localStorage
@@ -304,6 +307,8 @@ export function Sidebar({
         return "gsk_..."
       case "anthropic":
         return "sk-ant-..."
+      case "gemini":
+        return "AIza..."
       default:
         return "Inserisci API key"
     }
@@ -538,6 +543,17 @@ export function Sidebar({
                     >
                       Anthropic Claude
                     </option>
+                    <option
+                      value="gemini"
+                      style={{
+                        fontFamily: "Raleway, sans-serif",
+                        fontWeight: "300",
+                        padding: "12px 16px",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      Google Gemini
+                    </option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -603,6 +619,7 @@ export function Sidebar({
                 <p className="text-xs font-light text-gray-500 mt-2">
                   {selectedProvider === "groq" && "Registrati gratuitamente su console.groq.com"}
                   {selectedProvider === "anthropic" && "Ottieni la tua API key da console.anthropic.com"}
+                  {selectedProvider === "gemini" && "Ottieni la tua API key da aistudio.google.com"}
                 </p>
               </div>
 
@@ -715,6 +732,55 @@ export function Sidebar({
                           }}
                         >
                           Claude 3 Opus (Massima qualità)
+                        </option>
+                      </>
+                    )}
+                    {selectedProvider === "gemini" && (
+                      <>
+                        <option
+                          value="gemini-2.0-flash-exp"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Gemini 2.0 Flash (Experimental)
+                        </option>
+                        <option
+                          disabled
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            color: "#9CA3AF",
+                            fontSize: "11px",
+                            padding: "8px 16px",
+                          }}
+                        >
+                          ────────────────────
+                        </option>
+                        <option
+                          value="gemini-1.5-pro"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Gemini 1.5 Pro
+                        </option>
+                        <option
+                          value="gemini-1.5-flash"
+                          style={{
+                            fontFamily: "Raleway, sans-serif",
+                            fontWeight: "300",
+                            padding: "12px 16px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          Gemini 1.5 Flash (Veloce)
                         </option>
                       </>
                     )}

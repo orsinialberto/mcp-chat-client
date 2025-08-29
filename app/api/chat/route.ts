@@ -1,6 +1,7 @@
 import { groq } from "@ai-sdk/groq";
 import { createAnthropic } from '@ai-sdk/anthropic';
-import { streamText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { streamText, LanguageModelV1 } from 'ai';
 import { MCPSingleton, MCPLogger } from '@/lib/mcp';
 
 // System prompt specifico per mostrare TUTTI i tenant
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
     MCPLogger.info("📝 Messaggi da processare:", { count: messages.length, provider, model: selectedModel })
 
     // Configurazione modello basata sul provider
-    let model
+    let model: any
     let providerName = ""
 
     switch (provider) {
@@ -47,9 +48,9 @@ export async function POST(req: Request) {
             { status: 500, headers: { "Content-Type": "application/json" } },
           )
         }
-        model = groq(selectedModel || "llama-3.1-8b-instant", {
-          apiKey: groqKey
-        })
+        // Set the API key in environment for groq
+        process.env.GROQ_API_KEY = groqKey
+        model = groq(selectedModel || "llama-3.1-8b-instant")
         providerName = "Groq"
         break
 
@@ -72,11 +73,71 @@ export async function POST(req: Request) {
         providerName = "Anthropic"
         break
 
+      case "gemini":
+        const geminiKey = apiKey || process.env.GEMINI_API_KEY
+        if (!geminiKey) {
+          return new Response(
+            JSON.stringify({
+              error: "API Key Gemini non configurata",
+              details: "Inserisci la tua API key Gemini nelle impostazioni o aggiungi GEMINI_API_KEY nel file .env.local",
+            }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
+          )
+        }
+        // Use OpenAI-compatible endpoint for Google Gemini with custom fetch to fix tool calls
+        const geminiClient = createOpenAI({
+          apiKey: geminiKey,
+          baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+          fetch: async (url, options) => {
+            const response = await fetch(url, options);
+            
+            if (!response.body) return response;
+            
+            // Create a transform stream to fix tool calls format
+            const transformStream = new TransformStream({
+              transform(chunk, controller) {
+                const text = new TextDecoder().decode(chunk);
+                const lines = text.split('\n');
+                
+                const fixedLines = lines.map(line => {
+                  if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                    try {
+                      const data = JSON.parse(line.slice(6));
+                      if (data.choices?.[0]?.delta?.tool_calls) {
+                        data.choices[0].delta.tool_calls = data.choices[0].delta.tool_calls.map((toolCall: any, index: number) => ({
+                          ...toolCall,
+                          index: index
+                        }));
+                      }
+                      return 'data: ' + JSON.stringify(data);
+                    } catch (e) {
+                      return line;
+                    }
+                  }
+                  return line;
+                });
+                
+                controller.enqueue(new TextEncoder().encode(fixedLines.join('\n')));
+              }
+            });
+            
+            return new Response(response.body.pipeThrough(transformStream), {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers
+            });
+          }
+        });
+
+        model = geminiClient(selectedModel || "gemini-2.0-flash-exp");
+        providerName = "Google Gemini"
+        break
+
       default:
         return new Response(
           JSON.stringify({
             error: "Provider non supportato",
-            details: `Provider '${provider}' non riconosciuto. Usa: groq, anthropic`,
+            details: `Provider '${provider}' non riconosciuto. Usa: groq, anthropic, gemini`,
           }),
           { status: 400, headers: { "Content-Type": "application/json" } },
         )
