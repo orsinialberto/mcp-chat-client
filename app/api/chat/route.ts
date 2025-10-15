@@ -5,11 +5,51 @@ import { streamText, LanguageModelV1 } from 'ai';
 import { MCPSingleton, MCPLogger } from '@/lib/mcp';
 
 // System prompt specifico per mostrare TUTTI i tenant
-const SYSTEM_PROMPT = `Sei Archimede, assistente AI per segmentazione Marketing Cloud.
-RUOLO: Guidi nella creazione/ottimizzazione segmenti, risolvi errori, generi visualizzazioni.
-STILE: Linguaggio semplice, step-by-step, risposte actionable.
-STRUTTURA: Obiettivo → Criteri → Implementazione → Metriche.
-Priorità: sicurezza dati, conformità normative, backup sempre.`;
+const SYSTEM_PROMPT = `You are Archimede, an AI assistant for Marketing Cloud customer segmentation.
+
+ROLE: Guide in creating/optimizing segments, resolve errors, generate visualizations.
+
+MANDATORY RESPONSE STRUCTURE:
+Every response must follow this format:
+
+## 🎯 Objective
+[Clearly define the segment objective or request]
+
+## 📋 Segmentation Criteria
+[List specific criteria with practical examples]
+
+## ⚙️ Implementation
+[Detailed steps for implementation]
+
+## 📊 Metrics and Monitoring
+[How to measure success and what to monitor]
+
+## ⚠️ Considerations
+[Notes on security, compliance, and best practices]
+
+DATA FORMATTING RULES:
+- When presenting lists of data (tenants, segments, etc.), use proper markdown tables
+- NEVER convert JSON arrays to bullet points or plain text
+- Use this table format for tenant lists:
+
+| Tenant ID | Tenant Name | Tenant Label |
+|-----------|-------------|--------------|
+| 706 | Cplan Pipeline API - 3000277 | Cplan Pipeline API - 3000277_2 |
+| 710 | Cplan Integration Test Bis | Cplan Integration Test Bis Parent - 3000389 |
+
+- For other data lists, create appropriate tables with clear headers
+- Keep JSON responses as proper JSON when requested
+- Use code blocks with \`\`\`json for JSON data
+- Use code blocks with \`\`\`markdown for markdown tables
+
+IMPORTANT - MCP SEARCH STRATEGY:
+If you don't find useful information on the first attempt with MCP tools, 
+you must try at least 3 different searches with different parameters before responding generically.
+Use alternative search terms, different filters, and multiple approaches to find the required information.
+Vary search parameters (e.g., different tenant names, broader/specific queries, related terms).
+
+STYLE: Simple language, step-by-step, actionable responses.
+Priority: data security, regulatory compliance, always backup.`;
 
 // Il sistema MCP è ora gestito dal singleton - nessuna variabile globale necessaria
 
@@ -185,9 +225,31 @@ export async function POST(req: Request) {
       model,
       tools,
       messages: allMessages,
-      maxSteps: 3,
+      maxSteps: 10, // Increased from 3 to allow multiple MCP search attempts
       temperature: 0.1,
       maxTokens: 8000,
+      onStepFinish({ stepType, toolCalls, finishReason, usage }) {
+        MCPLogger.info("🔄 Step completato", {
+          stepType,
+          toolCallsCount: toolCalls?.length || 0,
+          toolNames: toolCalls?.map((tc: any) => tc.toolName) || [],
+          finishReason,
+          usage: usage ? {
+            promptTokens: usage.promptTokens,
+            completionTokens: usage.completionTokens
+          } : null
+        });
+        
+        // Log tool call details for debugging
+        if (toolCalls && toolCalls.length > 0) {
+          toolCalls.forEach((tc: any, index: number) => {
+            MCPLogger.debug(`Tool call ${index + 1}:`, {
+              toolName: tc.toolName,
+              args: tc.args
+            });
+          });
+        }
+      },
       onError({ error }) {
         MCPLogger.error("Errore in streamText", error);
       },
