@@ -247,9 +247,7 @@ export async function POST(req: Request) {
 
     MCPLogger.info("✅ streamText completato, restituendo risposta")
 
-    const dataStreamResponse = response.toDataStreamResponse();
-    dataStreamResponse.headers.set('Content-Type', 'text/plain; charset=utf-8');
-    return dataStreamResponse;
+    return response.toDataStreamResponse();
 
   } catch (error) {
     MCPLogger.error("❌ Errore nella chat:", error)

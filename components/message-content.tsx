@@ -2,7 +2,7 @@
 import { ChartRenderer } from "./chart-renderer"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { MCPLogger } from "@/lib/mcp"
+import { Logger } from "@/lib/logger"
 
 interface MessageContentProps {
   content: string
@@ -31,7 +31,7 @@ export function MessageContent({ content }: MessageContentProps) {
       cleaned = cleaned.replace(/Ã' /g, 'Ò')
       cleaned = cleaned.replace(/Ã™/g, 'Ù')
     } catch (error) {
-      MCPLogger.warn('Error fixing character encoding:', error)
+      Logger.warn('Error fixing character encoding:', error)
     }
     
     return cleaned
