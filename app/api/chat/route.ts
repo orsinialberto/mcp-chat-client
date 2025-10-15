@@ -4,7 +4,6 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, LanguageModelV1 } from 'ai';
 import { MCPSingleton, MCPLogger } from '@/lib/mcp';
 
-// System prompt specifico per mostrare TUTTI i tenant
 const SYSTEM_PROMPT = `You are Archimede, an AI assistant for Marketing Cloud customer segmentation.
 
 ROLE: Guide in creating/optimizing segments, resolve errors, generate visualizations.
@@ -51,7 +50,6 @@ Vary search parameters (e.g., different tenant names, broader/specific queries, 
 STYLE: Simple language, step-by-step, actionable responses.
 Priority: data security, regulatory compliance, always backup.`;
 
-// Il sistema MCP è ora gestito dal singleton - nessuna variabile globale necessaria
 
 export async function POST(req: Request) {
   MCPLogger.info("🚀 API Chat chiamata")
@@ -72,7 +70,6 @@ export async function POST(req: Request) {
 
     MCPLogger.info("📝 Messaggi da processare:", { count: messages.length, provider, model: selectedModel })
 
-    // Configurazione modello basata sul provider
     let model: any
     let providerName = ""
 
@@ -88,7 +85,6 @@ export async function POST(req: Request) {
             { status: 500, headers: { "Content-Type": "application/json" } },
           )
         }
-        // Set the API key in environment for groq
         process.env.GROQ_API_KEY = groqKey
         model = groq(selectedModel || "llama-3.1-8b-instant")
         providerName = "Groq"
@@ -124,7 +120,6 @@ export async function POST(req: Request) {
             { status: 500, headers: { "Content-Type": "application/json" } },
           )
         }
-        // Use OpenAI-compatible endpoint for Google Gemini with custom fetch to fix tool calls
         const geminiClient = createOpenAI({
           apiKey: geminiKey,
           baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
@@ -133,7 +128,6 @@ export async function POST(req: Request) {
             
             if (!response.body) return response;
             
-            // Create a transform stream to fix tool calls format
             const transformStream = new TransformStream({
               transform(chunk, controller) {
                 const text = new TextDecoder().decode(chunk);
@@ -143,12 +137,14 @@ export async function POST(req: Request) {
                   if (line.startsWith('data: ') && line !== 'data: [DONE]') {
                     try {
                       const data = JSON.parse(line.slice(6));
+                      
                       if (data.choices?.[0]?.delta?.tool_calls) {
                         data.choices[0].delta.tool_calls = data.choices[0].delta.tool_calls.map((toolCall: any, index: number) => ({
                           ...toolCall,
                           index: index
                         }));
                       }
+                      
                       return 'data: ' + JSON.stringify(data);
                     } catch (e) {
                       return line;
@@ -185,7 +181,6 @@ export async function POST(req: Request) {
 
     MCPLogger.info(`✅ ${providerName} configurato correttamente`)
 
-    // Ottieni gli strumenti MCP tramite il singleton (con gestione automatica della connessione)
     let tools = {}
     
     try {
@@ -198,23 +193,19 @@ export async function POST(req: Request) {
         tools: toolNames
       })
       
-      // Log dello stato della connessione per debugging
       const connectionStatus = mcpSingleton.getConnectionStatus()
       MCPLogger.debug("📊 Stato connessione MCP", connectionStatus)
       
     } catch (error) {
       MCPLogger.error("❌ Errore recupero strumenti MCP", error)
-      // Continua senza tools MCP in caso di errore
       tools = {}
     }
 
-    // Prepara i messaggi con system prompt
     const systemMessage = {
       role: "system" as const,
       content: SYSTEM_PROMPT
     };
 
-    // Combina system message con i messaggi dell'utente
     const allMessages = [systemMessage, ...messages];
 
     MCPLogger.debug("💭 System message aggiunto")
@@ -225,7 +216,7 @@ export async function POST(req: Request) {
       model,
       tools,
       messages: allMessages,
-      maxSteps: 10, // Increased from 3 to allow multiple MCP search attempts
+      maxSteps: 10,
       temperature: 0.1,
       maxTokens: 8000,
       onStepFinish({ stepType, toolCalls, finishReason, usage }) {
@@ -240,7 +231,6 @@ export async function POST(req: Request) {
           } : null
         });
         
-        // Log tool call details for debugging
         if (toolCalls && toolCalls.length > 0) {
           toolCalls.forEach((tc: any, index: number) => {
             MCPLogger.debug(`Tool call ${index + 1}:`, {
@@ -257,7 +247,9 @@ export async function POST(req: Request) {
 
     MCPLogger.info("✅ streamText completato, restituendo risposta")
 
-    return response.toDataStreamResponse();
+    const dataStreamResponse = response.toDataStreamResponse();
+    dataStreamResponse.headers.set('Content-Type', 'text/plain; charset=utf-8');
+    return dataStreamResponse;
 
   } catch (error) {
     MCPLogger.error("❌ Errore nella chat:", error)

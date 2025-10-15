@@ -5,6 +5,7 @@ export const MCP_CONFIG: MCPConfig = {
     command: '/usr/lib/jvm/temurin-17-jdk-amd64/bin/java',
     args: [
       '-Dspring.ai.mcp.server.transport=STDIO',
+      '-Dfile.encoding=UTF-8',
       '-jar',
       '/home/alberto_orsini_linux/dev/albe/plan-segment-assistant/plan-segment-assistant/target/plan-segment-assistant-0.0.1-SNAPSHOT.jar'
     ],

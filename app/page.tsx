@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { useChat } from 'ai/react'
 import { MessageContent } from "@/components/message-content"
 import { Sidebar } from "@/components/sidebar"
+import { MCPLogger } from "@/lib/mcp"
 
 interface ChatMessage {
   id: string
@@ -52,7 +53,7 @@ export default function MCPChatClient() {
           }))
           setSavedChats(parsedChats)
         } catch (error) {
-          console.error("Errore caricamento chat:", error)
+          MCPLogger.error("Errore caricamento chat:", error)
           setSavedChats([])
         }
       }
@@ -165,7 +166,7 @@ export default function MCPChatClient() {
       apiKey: apiKeys[selectedProvider as keyof typeof apiKeys],
     },
     onError: (error) => {
-      console.error('Errore dettagliato nella chat:', error)
+      MCPLogger.error('Errore dettagliato nella chat:', error)
       
       // Salva il messaggio di errore nello storico della chat
       if (currentChatId) {

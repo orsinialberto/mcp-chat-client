@@ -17,13 +17,11 @@ export class MCPSingleton {
     this.connectionManager = new MCPConnectionManager(this);
     MCPLifecycleManager.setupProcessHandlers();
     MCPLifecycleManager.registerCleanupHandler(() => this.cleanup());
-    MCPLogger.info('MCPSingleton constructor chiamato');
   }
 
   static getInstance(): MCPSingleton {
     if (!MCPSingleton.instance) {
       MCPSingleton.instance = new MCPSingleton();
-      MCPLogger.info('Nuova istanza MCPSingleton creata');
     }
     return MCPSingleton.instance;
   }
@@ -40,11 +38,10 @@ export class MCPSingleton {
 
   private async ensureInitialized(): Promise<void> {
     if (this.clientInstance?.isConnected) {
-      return; // Già inizializzato e connesso
+      return;
     }
 
     if (this.isInitializing && this.initializationPromise) {
-      // Attendi che l'inizializzazione in corso finisca
       await this.initializationPromise;
       return;
     }

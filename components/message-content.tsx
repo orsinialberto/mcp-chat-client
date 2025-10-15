@@ -2,25 +2,41 @@
 import { ChartRenderer } from "./chart-renderer"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { MCPLogger } from "@/lib/mcp"
 
 interface MessageContentProps {
   content: string
 }
 
 export function MessageContent({ content }: MessageContentProps) {
-  // Funzione per pulire il contenuto
   const cleanContent = (text: string) => {
-    // Rimuovi virgolette all'inizio e alla fine se presenti
     let cleaned = text.trim()
     if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
       cleaned = cleaned.slice(1, -1)
     }
-    // Sostituisci \n con veri line break
     cleaned = cleaned.replace(/\\n/g, '\n')
+    
+    try {
+      cleaned = cleaned.replace(/\uFFFD/g, '')
+      cleaned = cleaned.replace(/Ã /g, 'à')
+      cleaned = cleaned.replace(/Ã¨/g, 'è')
+      cleaned = cleaned.replace(/Ã©/g, 'é')
+      cleaned = cleaned.replace(/Ã¬/g, 'ì')
+      cleaned = cleaned.replace(/Ã²/g, 'ò')
+      cleaned = cleaned.replace(/Ã¹/g, 'ù')
+      cleaned = cleaned.replace(/Ã /g, 'À')
+      cleaned = cleaned.replace(/Ãˆ/g, 'È')
+      cleaned = cleaned.replace(/Ã‰/g, 'É')
+      cleaned = cleaned.replace(/ÃŒ/g, 'Ì')
+      cleaned = cleaned.replace(/Ã' /g, 'Ò')
+      cleaned = cleaned.replace(/Ã™/g, 'Ù')
+    } catch (error) {
+      MCPLogger.warn('Error fixing character encoding:', error)
+    }
+    
     return cleaned
   }
 
-  // Funzione per parsare i grafici dal contenuto
   const parseCharts = (text: string) => {
     const chartRegex = /```chart\s*\n([\s\S]*?)\n```/g
     const parts = []
@@ -28,7 +44,6 @@ export function MessageContent({ content }: MessageContentProps) {
     let match
 
     while ((match = chartRegex.exec(text)) !== null) {
-      // Aggiungi il testo prima del grafico
       if (match.index > lastIndex) {
         parts.push({
           type: "text",
@@ -36,7 +51,6 @@ export function MessageContent({ content }: MessageContentProps) {
         })
       }
 
-      // Prova a parsare il JSON del grafico
       try {
         const chartData = JSON.parse(match[1])
         parts.push({
@@ -44,7 +58,6 @@ export function MessageContent({ content }: MessageContentProps) {
           content: chartData,
         })
       } catch (error) {
-        // Se il parsing fallisce, mostra come testo
         parts.push({
           type: "text",
           content: match[0],
@@ -54,7 +67,6 @@ export function MessageContent({ content }: MessageContentProps) {
       lastIndex = match.index + match[0].length
     }
 
-    // Aggiungi il testo rimanente
     if (lastIndex < text.length) {
       parts.push({
         type: "text",
@@ -65,7 +77,6 @@ export function MessageContent({ content }: MessageContentProps) {
     return parts.length > 0 ? parts : [{ type: "text", content: text }]
   }
 
-  // Prima pulisci il contenuto, poi parsalo
   const cleanedContent = cleanContent(content)
   const parts = parseCharts(cleanedContent)
 
@@ -80,7 +91,6 @@ export function MessageContent({ content }: MessageContentProps) {
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
               components={{
-                // Custom styling for better appearance
                 h1: ({children}) => <h1 className="text-xl font-semibold mb-3 text-gray-900">{children}</h1>,
                 h2: ({children}) => <h2 className="text-lg font-semibold mb-2 text-gray-900">{children}</h2>,
                 h3: ({children}) => <h3 className="text-base font-semibold mb-2 text-gray-900">{children}</h3>,
