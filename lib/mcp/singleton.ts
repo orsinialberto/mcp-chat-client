@@ -6,8 +6,12 @@ import { MCPLogger } from './logger';
 import { MCP_CONFIG } from './config';
 import type { MCPClientInstance, ConnectionStatus } from './types';
 
+// Use globalThis to persist singleton across HMR (Hot Module Replacement)
+const globalForMCP = globalThis as unknown as {
+  mcpSingleton: MCPSingleton | undefined;
+};
+
 export class MCPSingleton {
-  private static instance: MCPSingleton | null = null;
   private clientInstance: MCPClientInstance | null = null;
   private connectionManager: MCPConnectionManager;
   private isInitializing: boolean = false;
@@ -20,10 +24,14 @@ export class MCPSingleton {
   }
 
   static getInstance(): MCPSingleton {
-    if (!MCPSingleton.instance) {
-      MCPSingleton.instance = new MCPSingleton();
+    // Use globalThis to survive HMR reloads
+    if (!globalForMCP.mcpSingleton) {
+      MCPLogger.info('📦 Creating new MCP Singleton instance');
+      globalForMCP.mcpSingleton = new MCPSingleton();
+    } else {
+      MCPLogger.debug('♻️ Reusing existing MCP Singleton instance (HMR safe)');
     }
-    return MCPSingleton.instance;
+    return globalForMCP.mcpSingleton;
   }
 
   async getClient(): Promise<any> {

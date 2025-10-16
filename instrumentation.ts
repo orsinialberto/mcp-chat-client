@@ -3,11 +3,17 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const { MCPSingleton, MCPLogger } = await import('./lib/mcp');
     
+    const mcpSingleton = MCPSingleton.getInstance();
+    
+    // Check if already initialized (prevents re-initialization during HMR)
+    if (mcpSingleton.isReady()) {
+      MCPLogger.info('✅ MCP already initialized, skipping (HMR detected)');
+      return;
+    }
+    
     MCPLogger.info('🚀 Starting eager MCP initialization...');
     
     try {
-      const mcpSingleton = MCPSingleton.getInstance();
-      
       // Pre-initialize the MCP connection
       await mcpSingleton.getTools();
       
