@@ -32,10 +32,10 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 
 **Supported Providers**:
 
-#### Groq
-- **Model**: llama-3.1-8b-instant
-- **Benefits**: Fast inference, free tier available
-- **Use Case**: Quick responses, testing, development
+#### Google Gemini (Default)
+- **Model**: gemini-2.0-flash-exp
+- **Benefits**: Fast inference, advanced capabilities, generous free tier
+- **Use Case**: Default choice for all segmentation tasks, real-time analysis
 
 #### Anthropic Claude
 - **Model**: claude-3-5-sonnet-20241022

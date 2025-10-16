@@ -14,10 +14,9 @@ Archimede is an intelligent chat application that helps with Marketing Cloud cus
 - **UI**: React 19
 - **Styling**: Tailwind CSS with Radix UI components
 - **AI Integration**: AI SDK with multiple providers
+  - Google Gemini (Default)
   - Anthropic (Claude)
-  - Groq (Llama)
   - OpenAI
-  - Google Gemini
 - **External Integration**: Model Context Protocol (MCP) via STDIO transport
 
 ## 🛠️ Installation
@@ -56,9 +55,8 @@ Create a `.env.local` file in the project root with the following variables:
 
 ```bash
 # AI Provider API Keys (at least one is required)
-GROQ_API_KEY=your_groq_api_key_here
-TEST_API_KEY=your_anthropic_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
+TEST_API_KEY=your_anthropic_api_key_here
 ```
 
 ### Optional Configuration
@@ -117,7 +115,7 @@ npm run test:watch
 ## 🎯 Key Features
 
 ### 1. Multi-Provider AI Support
-Switch between different AI providers (Groq, Anthropic, Gemini) based on your needs and API availability.
+Switch between different AI providers (Gemini, Anthropic) based on your needs and API availability.
 
 ### 2. MCP Integration
 Seamless integration with Model Context Protocol servers for real-time data access and tool execution.

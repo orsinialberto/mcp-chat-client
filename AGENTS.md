@@ -7,7 +7,7 @@ This is a **Next.js 15 application** with the following stack:
 - **Runtime**: Node.js
 - **UI**: React 19
 - **Styling**: Tailwind CSS with Radix UI components
-- **AI Integration**: AI SDK with multiple providers (Anthropic, Groq, OpenAI, Ollama)
+- **AI Integration**: AI SDK with multiple providers (Google Gemini, Anthropic, OpenAI, Ollama)
 - **External Integration**: Model Context Protocol (MCP) via STDIO transport
 
 The application is an AI chat client specialized for Marketing Cloud customer segmentation, named "Archimede".

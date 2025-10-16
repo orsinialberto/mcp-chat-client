@@ -25,8 +25,8 @@ interface SavedChat {
 
 export default function MCPChatClient() {
   const [mcpServerUrl, setMcpServerUrl] = useState("http://localhost:8080")
-  const [selectedProvider, setSelectedProvider] = useState("groq")
-  const [selectedModel, setSelectedModel] = useState("llama-3.1-8b-instant")
+  const [selectedProvider, setSelectedProvider] = useState("gemini")
+  const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash-exp")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
@@ -34,7 +34,7 @@ export default function MCPChatClient() {
   const [savedChats, setSavedChats] = useState<SavedChat[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const apiKeys = useState({ groq: "", anthropic: "", gemini: "" })
+  const apiKeys = useState({ anthropic: "", gemini: "" })
 
   // Carica le chat salvate
   useEffect(() => {
@@ -274,7 +274,6 @@ export default function MCPChatClient() {
     
     // Imposta modelli di default per ogni provider
     const defaultModels = {
-      groq: "llama-3.1-8b-instant",
       anthropic: "claude-3-5-sonnet-20241022",
       gemini: "gemini-2.0-flash-exp",
     }
@@ -285,8 +284,6 @@ export default function MCPChatClient() {
   // Ottieni il nome del provider attuale
   const getProviderDisplayName = () => {
     switch (selectedProvider) {
-      case "groq":
-        return "Groq"
       case "anthropic":
         return "Anthropic"
       case "gemini":

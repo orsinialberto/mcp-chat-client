@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "latest",
-    "@ai-sdk/groq": "latest",
     "@ai-sdk/openai": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@modelcontextprotocol/sdk": "^1.17.0",

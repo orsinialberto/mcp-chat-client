@@ -10,14 +10,6 @@ export async function POST(req: Request) {
     let headers: Record<string, string> = {}
 
     switch (provider) {
-      case "groq":
-        if (!apiKey.startsWith("gsk_")) {
-          return Response.json({ valid: false, error: "API key Groq deve iniziare con 'gsk_'" })
-        }
-        testUrl = "https://api.groq.com/openai/v1/models"
-        headers = { Authorization: `Bearer ${apiKey}` }
-        break
-
       case "anthropic":
         if (!apiKey.startsWith("sk-ant-")) {
           return Response.json({ valid: false, error: "API key Anthropic deve iniziare con 'sk-ant-'" })

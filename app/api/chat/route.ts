@@ -1,4 +1,3 @@
-import { groq } from "@ai-sdk/groq";
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, LanguageModelV1 } from 'ai';
@@ -52,13 +51,15 @@ Priority: data security, regulatory compliance, always backup.`;
 
 
 export async function POST(req: Request) {
+
   MCPLogger.info("🚀 API Chat chiamata")
 
   try {
     const body = await req.json()
+  
     MCPLogger.debug("📥 Body ricevuto:", body)
 
-    const { messages, provider = "groq", model: selectedModel, apiKey } = body
+    const { messages, provider = "gemini", model: selectedModel, apiKey } = body
 
     if (!messages || !Array.isArray(messages)) {
       MCPLogger.error("❌ Messaggi non validi:", messages)
@@ -74,22 +75,6 @@ export async function POST(req: Request) {
     let providerName = ""
 
     switch (provider) {
-      case "groq":
-        const groqKey = apiKey || process.env.GROQ_API_KEY
-        if (!groqKey) {
-          return new Response(
-            JSON.stringify({
-              error: "API Key Groq non configurata",
-              details: "Inserisci la tua API key Groq nelle impostazioni o aggiungi GROQ_API_KEY nel file .env.local.",
-            }),
-            { status: 500, headers: { "Content-Type": "application/json" } },
-          )
-        }
-        process.env.GROQ_API_KEY = groqKey
-        model = groq(selectedModel || "llama-3.1-8b-instant")
-        providerName = "Groq"
-        break
-
       case "anthropic":
         const anthropicKey = apiKey || process.env.TEST_API_KEY
         if (!anthropicKey) {
@@ -173,7 +158,7 @@ export async function POST(req: Request) {
         return new Response(
           JSON.stringify({
             error: "Provider non supportato",
-            details: `Provider '${provider}' non riconosciuto. Usa: groq, anthropic, gemini`,
+            details: `Provider '${provider}' non riconosciuto. Usa: anthropic, gemini`,
           }),
           { status: 400, headers: { "Content-Type": "application/json" } },
         )

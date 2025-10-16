@@ -72,19 +72,16 @@ export function Sidebar({
   const [isResizing, setIsResizing] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
 
-  // Stati per API keys dei tre provider
+  // Stati per API keys
   const [apiKeys, setApiKeys] = useState({
-    groq: "",
     anthropic: "",
     gemini: "",
   })
   const [showApiKeys, setShowApiKeys] = useState({
-    groq: false,
     anthropic: false,
     gemini: false,
   })
   const [apiKeyStatus, setApiKeyStatus] = useState({
-    groq: 'unknown' as 'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error',
     anthropic: 'unknown' as 'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error',
     gemini: 'unknown' as 'unknown' | 'valid' | 'invalid' | 'testing' | 'empty' | 'error',
   })
@@ -303,8 +300,6 @@ export function Sidebar({
   // Ottieni placeholder per API key
   const getApiKeyPlaceholder = (provider: string) => {
     switch (provider) {
-      case "groq":
-        return "gsk_..."
       case "anthropic":
         return "sk-ant-..."
       case "gemini":
@@ -522,7 +517,7 @@ export function Sidebar({
                     }}
                   >
                     <option
-                      value="groq"
+                      value="gemini"
                       style={{
                         fontFamily: "Raleway, sans-serif",
                         fontWeight: "300",
@@ -530,7 +525,7 @@ export function Sidebar({
                         lineHeight: "1.5",
                       }}
                     >
-                      Groq (Gratuito)
+                      Google Gemini
                     </option>
                     <option
                       value="anthropic"
@@ -542,17 +537,6 @@ export function Sidebar({
                       }}
                     >
                       Anthropic Claude
-                    </option>
-                    <option
-                      value="gemini"
-                      style={{
-                        fontFamily: "Raleway, sans-serif",
-                        fontWeight: "300",
-                        padding: "12px 16px",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      Google Gemini
                     </option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
@@ -617,7 +601,6 @@ export function Sidebar({
                   </div>
                 </div>
                 <p className="text-xs font-light text-gray-500 mt-2">
-                  {selectedProvider === "groq" && "Registrati gratuitamente su console.groq.com"}
                   {selectedProvider === "anthropic" && "Ottieni la tua API key da console.anthropic.com"}
                   {selectedProvider === "gemini" && "Ottieni la tua API key da aistudio.google.com"}
                 </p>
@@ -637,55 +620,6 @@ export function Sidebar({
                       lineHeight: "1.5",
                     }}
                   >
-                    {selectedProvider === "groq" && (
-                      <>
-                        <option
-                          value="llama-3.1-8b-instant"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          Llama 3.1 8B (Consigliato)
-                        </option>
-                        <option
-                          disabled
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            color: "#9CA3AF",
-                            fontSize: "11px",
-                            padding: "8px 16px",
-                          }}
-                        >
-                          ────────────────────
-                        </option>
-                        <option
-                          value="mixtral-8x7b-32768"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          Mixtral 8x7B
-                        </option>
-                        <option
-                          value="llama-3.1-70b-versatile"
-                          style={{
-                            fontFamily: "Raleway, sans-serif",
-                            fontWeight: "300",
-                            padding: "12px 16px",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          Llama 3.1 70B (Più potente)
-                        </option>
-                      </>
-                    )}
                     {selectedProvider === "anthropic" && (
                       <>
                         <option
