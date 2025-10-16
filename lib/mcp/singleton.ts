@@ -195,6 +195,26 @@ export class MCPSingleton {
     MCPLogger.info('Cleanup MCP completato');
   }
 
+  /**
+   * Try to get tools, but don't throw if initialization fails
+   * Useful for eager initialization with graceful degradation
+   */
+  async getToolsSafe(): Promise<any> {
+    try {
+      return await this.getTools();
+    } catch (error) {
+      MCPLogger.warn('Failed to get tools safely, returning empty object', error);
+      return {};
+    }
+  }
+
+  /**
+   * Check if MCP is ready without triggering initialization
+   */
+  isReady(): boolean {
+    return this.clientInstance?.isConnected ?? false;
+  }
+
   // Metodo per debugging
   getDebugInfo(): any {
     return {

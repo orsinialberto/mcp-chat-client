@@ -7,24 +7,6 @@ const SYSTEM_PROMPT = `You are Archimede, an AI assistant for Marketing Cloud cu
 
 ROLE: Guide in creating/optimizing segments, resolve errors, generate visualizations.
 
-MANDATORY RESPONSE STRUCTURE:
-Every response must follow this format:
-
-## 🎯 Objective
-[Clearly define the segment objective or request]
-
-## 📋 Segmentation Criteria
-[List specific criteria with practical examples]
-
-## ⚙️ Implementation
-[Detailed steps for implementation]
-
-## 📊 Metrics and Monitoring
-[How to measure success and what to monitor]
-
-## ⚠️ Considerations
-[Notes on security, compliance, and best practices]
-
 DATA FORMATTING RULES:
 - When presenting lists of data (tenants, segments, etc.), use proper markdown tables
 - NEVER convert JSON arrays to bullet points or plain text
@@ -172,13 +154,20 @@ export async function POST(req: Request) {
       const mcpSingleton = MCPSingleton.getInstance()
       tools = await mcpSingleton.getTools()
       
+      // Check if MCP was pre-initialized or initialized on-demand
+      const connectionStatus = mcpSingleton.getConnectionStatus()
+      if (connectionStatus.connectionAttempts === 0 && mcpSingleton.isReady()) {
+        MCPLogger.debug("✨ Using pre-initialized MCP connection (eager initialization)")
+      } else {
+        MCPLogger.debug("🔄 MCP initialized on-demand (lazy initialization)")
+      }
+      
       const toolNames = Object.keys(tools)
       MCPLogger.info("🛠️ Strumenti MCP recuperati tramite singleton", {
         toolCount: toolNames.length,
         tools: toolNames
       })
       
-      const connectionStatus = mcpSingleton.getConnectionStatus()
       MCPLogger.debug("📊 Stato connessione MCP", connectionStatus)
       
     } catch (error) {
