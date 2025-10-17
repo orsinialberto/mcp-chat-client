@@ -37,22 +37,22 @@ This document provides a detailed, step-by-step implementation guide for the **R
   - [x] Test real-time scenarios (partial messages)
   - [x] Verify >80% code coverage (achieved 100%)
 
-### Phase 3: UI Components
+### Phase 3: UI Components ✅ COMPLETED
 
-- [ ] **Task 3.1**: Create `components/thinking-step.tsx`
-  - [ ] Individual thinking step component (NO icon inside, text only)
-  - [ ] Implement fade-in animation
-  - [ ] Style with Tailwind CSS (light blue boxes)
-  - [ ] Staggered animation delays
-  - [ ] Mobile responsive
+- [x] **Task 3.1**: Create `components/thinking-step.tsx`
+  - [x] Individual thinking step component (NO icon inside, text only)
+  - [x] Implement fade-in animation
+  - [x] Style with Tailwind CSS (light blue boxes)
+  - [x] Staggered animation delays
+  - [x] Mobile responsive
 
-- [ ] **Task 3.2**: Create `components/thinking-steps-container.tsx`
-  - [ ] Container for all thinking steps
-  - [ ] Header with "🧠 Ragionamento in corso..." (spinner while loading)
-  - [ ] Changes to "🧠 Ragionamento" when complete
-  - [ ] Display loading state indicator
-  - [ ] Ensure accessibility (ARIA labels)
-  - [ ] Mobile responsive
+- [x] **Task 3.2**: Create `components/thinking-steps-container.tsx`
+  - [x] Container for all thinking steps
+  - [x] Header with "🧠 Ragionamento in corso..." (spinner while loading)
+  - [x] Changes to "🧠 Ragionamento" when complete
+  - [x] Display loading state indicator
+  - [x] Ensure accessibility (ARIA labels)
+  - [x] Mobile responsive
 
 ### Phase 4: Backend Modifications
 
