@@ -20,22 +20,22 @@ This document provides a detailed, step-by-step implementation guide for the **R
   - [x] Document testing approach
   - [x] Reference AGENTS.md compliance
 
-### Phase 2: Core Utilities
+### Phase 2: Core Utilities ✅ COMPLETED
 
-- [ ] **Task 2.1**: Create `lib/thinking-stream-parser.ts`
-  - [ ] Define ThinkingStep and StreamedContent interfaces
-  - [ ] Implement parseStreamingContent function (real-time chunk parsing)
-  - [ ] Handle edge cases (no prefix, partial chunks, mixed content)
-  - [ ] Add JSDoc comments with streaming examples
-  - [ ] Optimize for repeated parsing (useMemo compatible)
+- [x] **Task 2.1**: Create `lib/thinking-stream-parser.ts`
+  - [x] Define ThinkingStep and StreamedContent interfaces
+  - [x] Implement parseStreamingContent function (real-time chunk parsing)
+  - [x] Handle edge cases (no prefix, partial chunks, mixed content)
+  - [x] Add JSDoc comments with streaming examples
+  - [x] Optimize for repeated parsing (useMemo compatible)
 
-- [ ] **Task 2.2**: Write unit tests in `__tests__/lib/thinking-stream-parser.test.ts`
-  - [ ] Test progressive chunk parsing
-  - [ ] Test messages without thinking prefix
-  - [ ] Test mixed thinking and answer content
-  - [ ] Test edge cases (empty chunks, malformed prefix)
-  - [ ] Test real-time scenarios (partial messages)
-  - [ ] Verify >80% code coverage
+- [x] **Task 2.2**: Write unit tests in `__tests__/lib/thinking-stream-parser.test.ts`
+  - [x] Test progressive chunk parsing
+  - [x] Test messages without thinking prefix
+  - [x] Test mixed thinking and answer content
+  - [x] Test edge cases (empty chunks, malformed prefix)
+  - [x] Test real-time scenarios (partial messages)
+  - [x] Verify >80% code coverage (achieved 100%)
 
 ### Phase 3: UI Components
 
