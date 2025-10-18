@@ -14,7 +14,7 @@ This document provides a detailed, step-by-step implementation guide for the **R
   - [x] Include UI mockup descriptions
   - [x] Document error handling improvements
 
-- [x] **Task 1.2**: Create `docs/features/thinking-process-plan.md` with implementation details
+- [x] **Task 1.2**: Create `docs/plans/thinking-process-plan.md` with implementation details
   - [x] List all files to create/modify
   - [x] Explain technical decisions
   - [x] Document testing approach
@@ -131,7 +131,7 @@ This document provides a detailed, step-by-step implementation guide for the **R
   - [ ] Fix any linting errors
 
 - [ ] **Task 7.3**: Update project documentation (NEW - User Request)
-  - [ ] Update `docs/features/project_features.md` - Add new feature section
+  - [ ] Update `docs/features.md` - Add new feature section
   - [ ] Update `docs/architecture.md` - Document new components and data flow
   - [ ] Update `README.md` (if exists) - Mention thinking process feature
   - [ ] Ensure all documentation is consistent and up-to-date
@@ -1024,7 +1024,7 @@ Answer content`
 
 ### File 8: Documentation Updates (Task 7.3)
 
-**File 8a: `docs/features/project_features.md` (MODIFY)**
+**File 8a: `docs/features.md` (MODIFY)**
 
 Add new section after "Future Enhancements" (around line 350):
 
@@ -1334,7 +1334,7 @@ Ideas for v2 of this feature:
 ## References
 
 - **AGENTS.md**: Development guidelines and standards
-- **docs/features/thinking-process.md**: Feature specification
+- **docs/features/thinking-process.md**: Feature specification (in progress)
 - **docs/architecture.md**: System architecture
 - **AI SDK Documentation**: https://sdk.vercel.ai/docs
 - **React Documentation**: https://react.dev

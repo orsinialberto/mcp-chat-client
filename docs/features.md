@@ -42,15 +42,6 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 - **Benefits**: High quality responses, advanced reasoning
 - **Use Case**: Complex segmentation tasks, production use
 
-#### OpenAI
-- **Configuration**: Customizable model selection
-- **Use Case**: GPT models for various tasks
-
-#### Ollama
-- **Configuration**: Local models support
-- **Benefits**: Privacy, no API costs
-- **Use Case**: On-premise deployments
-
 **Configuration**:
 - API keys managed via localStorage or environment variables
 - Real-time validation of API keys

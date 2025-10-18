@@ -14,10 +14,10 @@ The application is an AI chat client specialized for Marketing Cloud customer se
 
 ## Project Documentation
 For detailed information about the project, refer to:
-- **Project Structure**: `docs/project-structure.md` - Detailed explanation of the codebase organization
-- **Features**: `docs/features/` - Individual feature specifications and requirements
+- **Features Documentation**: `docs/features.md` - Complete list of implemented features and capabilities
 - **Architecture**: `docs/architecture.md` - System design and architectural decisions
-- **API Documentation**: `docs/api/` - Endpoint specifications and usage examples
+- **New Features**: `docs/features/` - Specifications for new or in-progress features only
+- **Development Plans**: `docs/plans/` - Implementation plans and checklists for features
 
 Always check these documents before implementing new features to understand the existing structure and requirements.
 
