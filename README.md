@@ -183,25 +183,9 @@ mcp-chat-client/
 - All MCP communications use secure STDIO transport
 - Input validation and sanitization on all user inputs
 
-## 📝 License
-
-[Add your license information here]
-
-## 👥 Authors
-
-[Add author information here]
-
 ## 🐛 Issues & Support
 
 For bugs and feature requests, please [create an issue](link-to-issues).
-
-## 📈 Roadmap
-
-- [ ] Add more AI provider options
-- [ ] Enhanced visualization capabilities
-- [ ] Export chat history
-- [ ] Multi-language support
-- [ ] Advanced segment analytics
 
 ---
 
