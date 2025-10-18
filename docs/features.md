@@ -338,6 +338,52 @@ AI chat assistant for Marketing Cloud customer segmentation, named "Archimede". 
 
 ---
 
+## Testing & Quality Assurance
+
+### End-to-End Testing (Playwright)
+**Description**: Comprehensive E2E tests verify the complete user flow from UI interaction to API response rendering.
+
+**Test Coverage**:
+- ✅ Message sending and receiving
+- ✅ API response verification
+- ✅ UI rendering validation
+- ✅ API-UI synchronization detection
+- ✅ LocalStorage persistence
+- ✅ Multiple messages handling
+- ✅ New chat creation
+
+**Key Benefits**:
+- **Confidence**: Every feature change is automatically verified
+- **Regression Prevention**: Catches bugs before deployment
+- **API-UI Sync Detection**: Identifies if API responds but UI fails to update
+- **Automated Testing**: Runs in CI/CD pipeline
+
+**Test Architecture**:
+- **Tool**: Playwright (Next.js recommended)
+- **Browser**: Chromium (default)
+- **Auto-start**: Next.js dev server started automatically
+- **Reports**: HTML reports with screenshots on failure
+
+**Running Tests**:
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run with UI (interactive mode)
+npm run test:e2e:ui
+
+# Debug mode
+npm run test:e2e:debug
+```
+
+**Test Types**:
+1. **Critical Path Tests**: Core functionality (send message → receive response)
+2. **API-UI Sync Tests**: Verify API responses are displayed in UI
+3. **Persistence Tests**: LocalStorage save/load verification
+4. **UI-Only Tests**: Interface rendering without API calls
+
+---
+
 ## Future Enhancements
 
 ### Planned Features

@@ -89,8 +89,10 @@ npm run lint
 
 ## 🧪 Running Tests
 
+### Unit Tests (Jest)
+
 ```bash
-# Run all tests
+# Run all unit tests
 npm test
 
 # Run tests with coverage
@@ -99,6 +101,38 @@ npm run test:coverage
 # Run tests in watch mode
 npm run test:watch
 ```
+
+### End-to-End Tests (Playwright)
+
+E2E tests verify the complete user flow, including API responses and UI rendering.
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run E2E tests with UI mode (interactive)
+npm run test:e2e:ui
+
+# Run E2E tests in debug mode
+npm run test:e2e:debug
+
+# Run specific test file
+npx playwright test e2e/chat.spec.ts
+
+# View test report
+npx playwright show-report
+```
+
+**What E2E Tests Cover**:
+- ✅ Message sending and receiving
+- ✅ API response verification
+- ✅ UI rendering and updates
+- ✅ API-UI synchronization (detects if API responds but UI doesn't update)
+- ✅ LocalStorage persistence
+- ✅ Multiple messages handling
+- ✅ New chat creation
+
+**Note**: E2E tests automatically start the Next.js dev server. Make sure port 3000 is available.
 
 ## 📚 Documentation
 
