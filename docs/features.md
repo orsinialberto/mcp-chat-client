@@ -1,7 +1,7 @@
 # MCP Chat Client - Features Documentation
 
 ## Overview
-MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer segmentation, named "Archimede". The application provides an intuitive interface for data analysts and marketers to interact with AI for segmentation tasks.
+AI chat assistant for Marketing Cloud customer segmentation, named "Archimede". Provides an intuitive interface for data analysts and marketers.
 
 ## Core Features
 
@@ -16,14 +16,14 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 - Delete completed or unwanted chats
 
 **Data Persistence**:
-- All chats saved automatically in browser localStorage
-- Chats persist across page refreshes
-- Chat history includes full message context
+- Auto-save to browser localStorage
+- Persist across page refreshes
+- Full message context saved
 
 **User Experience**:
-- Sidebar displays all active chats with previews
-- Click on any chat to switch context
-- Real-time updates as new messages arrive
+- Sidebar shows all chats with previews
+- Click to switch context
+- Real-time message updates
 
 ---
 
@@ -51,7 +51,7 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 ---
 
 ### 3. Model Context Protocol (MCP) Integration
-**Description**: Connection to external MCP server for specialized tools and data access.
+**Description**: Connect to external MCP server for specialized tools and data access.
 
 **Technical Details**:
 - **Transport**: STDIO communication with Java Spring Boot server
@@ -116,7 +116,7 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 ---
 
 ### 5. System Prompt Specialization
-**Description**: AI assistant configured specifically for Marketing Cloud segmentation tasks.
+**Description**: AI assistant configured for Marketing Cloud segmentation tasks.
 
 **Persona - "Archimede"**:
 - Expert in Marketing Cloud customer segmentation
@@ -175,8 +175,8 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
    - Support resources
 
 **User Experience**:
-- Prominent display on empty chat
-- One-click initiation of workflows
+- Display on empty chat
+- One-click workflow initiation
 - Context-aware suggestions
 
 ---
@@ -188,10 +188,10 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 
 #### API Keys
 - Input fields for each provider
-- Real-time validation against provider APIs
+- Real-time validation
 - Secure storage in localStorage
 - Fallback to environment variables
-- Visual feedback for valid/invalid keys
+- Visual feedback for validation
 
 #### Provider Selection
 - Dropdown for active provider
@@ -227,14 +227,14 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 4. Display remaining text with markdown
 
 **Content Cleaning**:
-- Remove chart blocks from text display
+- Remove chart blocks from text
 - Prevent duplicate rendering
-- Handle malformed chart data gracefully
+- Handle malformed data gracefully
 
 ---
 
 ### 9. Real-Time Streaming
-**Description**: Progressive message display as AI generates responses.
+**Description**: Progressive message display as AI generates content.
 
 **Implementation**:
 - AI SDK `useChat` hook for streaming
@@ -251,7 +251,7 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 ---
 
 ### 10. Error Handling & Recovery
-**Description**: Robust error management throughout the application.
+**Description**: Robust error management.
 
 **Error Types Handled**:
 - API connection failures
@@ -262,17 +262,17 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 - Network timeouts
 
 **Recovery Strategies**:
-- User-friendly error messages in Italian
+- User-friendly error messages (Italian)
 - Automatic retry for transient failures
-- Fallback to cached data when available
-- Clear instructions for user action
-- Detailed logging for debugging
+- Fallback to cached data
+- Clear action instructions
+- Detailed logging
 
 **User Feedback**:
-- Toast notifications for errors
+- Toast notifications
 - Inline error messages
 - Status indicators (connection, loading)
-- Suggested actions for resolution
+- Suggested resolution actions
 
 ---
 
@@ -309,7 +309,7 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 ### Efficient Rendering
 - React 19 concurrent features
 - Memoization for expensive operations
-- Virtual scrolling for long chat histories (future)
+- Virtual scrolling for long histories (future)
 
 ### Caching
 - localStorage for configuration
@@ -334,7 +334,7 @@ MCP Chat Client is a specialized AI chat assistant for Marketing Cloud customer 
 ### Adaptive Layout
 - Sidebar auto-collapses on mobile
 - Stacked layouts for narrow screens
-- Horizontal scrolling where appropriate
+- Horizontal scrolling when needed
 
 ---
 

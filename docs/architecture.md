@@ -1,4 +1,4 @@
-# MCP Singleton Architecture - Persistent Connection Management Solution
+# MCP Singleton Architecture
 
 ## Problem Statement
 
@@ -54,7 +54,7 @@ graph TD
 - Transport instance management
 
 #### 2. Connection Manager
-**Responsibility**: Connection health monitoring and automatic recovery
+**Responsibility**: Health monitoring and automatic recovery
 
 **Key Features**:
 - Periodic health checks (configurable interval)
@@ -69,7 +69,7 @@ graph TD
 - Proactive reconnection before failures impact users
 
 #### 3. Lifecycle Manager
-**Responsibility**: Process lifecycle and graceful shutdown management
+**Responsibility**: Process lifecycle and graceful shutdown
 
 **Key Features**:
 - Process signal handling (SIGTERM, SIGINT)
@@ -91,9 +91,9 @@ graph TD
 **Key Features**:
 - Configurable log levels (debug, info, warn, error)
 - Structured log formatting
-- Contextual information inclusion
+- Include contextual information
 - Environment-aware verbosity
-- Consistent prefix for MCP-related logs
+- Consistent prefix for MCP logs
 
 ### File Structure
 
@@ -128,19 +128,19 @@ lib/
 ## Architectural Patterns
 
 ### Singleton Pattern
-Ensures only one MCP connection instance exists throughout the application lifecycle, preventing resource conflicts and connection duplication.
+Ensures one MCP connection instance per process. Prevents resource conflicts and duplicate connections.
 
 ### Lazy Initialization
-MCP client and tools are initialized only when first requested, optimizing startup time and resource usage.
+Initialize MCP client and tools only when first requested. Optimizes startup time and resource usage.
 
 ### Health Check Pattern
-Periodic verification of connection health with automatic recovery mechanisms to maintain system reliability.
+Periodic health checks with automatic recovery to maintain reliability.
 
 ### Graceful Degradation
-System continues operating even with temporary connection issues, attempting automatic recovery without user intervention.
+System continues operating with temporary connection issues. Attempts automatic recovery without user intervention.
 
 ### Observer Pattern
-Lifecycle manager observes process signals and coordinates cleanup actions across all registered handlers.
+Lifecycle manager observes process signals and coordinates cleanup across registered handlers.
 
 ## Data Flow
 
@@ -208,18 +208,18 @@ Each component has one clear responsibility:
 - Logger: structured logging
 
 ### Dependency Inversion
-High-level modules depend on abstractions (interfaces) rather than concrete implementations, facilitating testing and flexibility.
+High-level modules depend on abstractions (interfaces), not concrete implementations. Facilitates testing and flexibility.
 
 ### Separation of Concerns
 Connection management, lifecycle handling, and logging are separate, loosely coupled modules.
 
 ### Fail-Safe Defaults
-System defaults to safe behavior on errors, attempting recovery before failing completely.
+System defaults to safe behavior on errors. Attempts recovery before failing.
 
 ## Scalability Considerations
 
 ### Horizontal Scaling
-While singleton pattern works for single-process applications, for multi-process deployments (e.g., cluster mode), consider:
+Singleton works for single-process apps. For multi-process deployments (cluster mode), consider:
 - Shared state management via Redis or similar
 - Process-specific singleton instances
 - Load balancer health checks integration
@@ -238,4 +238,4 @@ While singleton pattern works for single-process applications, for multi-process
 
 ---
 
-This architecture provides a robust, production-ready solution for managing persistent MCP connections with automatic recovery and monitoring capabilities.
+This architecture provides a robust solution for managing persistent MCP connections with automatic recovery and monitoring.

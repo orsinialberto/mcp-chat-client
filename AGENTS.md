@@ -36,6 +36,48 @@ Original: "I want to implement new feature for user authentication."
 Change: Added article "a" before "new feature" (countable noun requires an article)
 ```
 
+## Documentation Style Guidelines
+
+**IMPORTANT**: All documentation must be clear, simple, and concise.
+
+### Writing Principles
+- **Be Clear**: Use straightforward language that anyone can understand
+- **Be Simple**: Avoid unnecessary complexity and jargon
+- **Be Concise**: Say what you need to say in as few words as possible
+- **Avoid Verbosity**: Don't repeat the same concept multiple times
+- **Avoid Wordiness**: Cut unnecessary words and filler phrases
+- **Be Direct**: Get to the point quickly
+
+### What to Avoid
+- ❌ Long, complex sentences with multiple clauses
+- ❌ Unnecessary adjectives and adverbs
+- ❌ Redundant explanations
+- ❌ Overly formal or academic language
+- ❌ Excessive technical jargon without explanation
+- ❌ Repetitive content
+
+### What to Prefer
+- ✅ Short, clear sentences
+- ✅ Active voice over passive voice
+- ✅ Bullet points for lists
+- ✅ Direct statements
+- ✅ One idea per sentence
+- ✅ Plain language explanations
+
+### Examples
+
+**❌ Verbose:**
+> "In order to facilitate the implementation of the authentication mechanism, it is necessary to first undertake a comprehensive analysis of the existing system architecture, thereby ensuring that all relevant components are properly identified and their interdependencies are thoroughly understood."
+
+**✅ Concise:**
+> "Before implementing authentication, analyze the system architecture and identify component dependencies."
+
+**❌ Complex:**
+> "The utilization of environment variables provides a mechanism by which configuration parameters can be externalized from the codebase, thereby enhancing security and facilitating deployment across multiple environments."
+
+**✅ Simple:**
+> "Use environment variables to store configuration outside the code. This improves security and makes deployment easier."
+
 ## Code Style & Standards
 
 ### General Rules
@@ -52,16 +94,16 @@ Change: Added article "a" before "new feature" (countable noun requires an artic
 - **Variables/Functions**: camelCase (`getUserData`, `totalCount`)
 - **Classes**: PascalCase (`UserService`, `DatabaseConnection`)
 - **Constants**: UPPER_SNAKE_CASE (`MAX_RETRY_ATTEMPTS`, `API_BASE_URL`)
-- **Private methods**: prefix with underscore (`_validateInput`) or use TypeScript private keyword
-- **File names**: kebab-case (`user-service.js`, `auth-middleware.js`) or descriptive names without separators when appropriate
+- **Private methods**: prefix with underscore (`_validateInput`) or use TypeScript `private`
+- **File names**: kebab-case (`user-service.js`, `auth-middleware.js`)
 
 ### Error Handling
 - Always use try-catch blocks for async operations
-- Create custom error classes that extend Error when appropriate
-- Log errors with appropriate context using a structured logger
+- Create custom error classes that extend Error
+- Log errors with context using a structured logger
 - Never swallow errors silently
 - Use descriptive error messages
-- Implement graceful error recovery when possible
+- Implement graceful error recovery
 
 ```javascript
 class ValidationError extends Error {
@@ -103,47 +145,173 @@ project-root/
 
 ## Development Process
 
-### 1. Before Starting New Features
+### 1. Feature Development Workflow (MANDATORY)
 
-#### Phase 1: Problem Definition
-- Clearly define what you want to implement or what problem you want to solve
-- Understand the requirements and expected outcomes
-- Identify the scope and boundaries of the feature
-- Review existing code structure to understand the current implementation
+When a new feature is requested, follow this **strict workflow** with mandatory review checkpoints:
 
-#### Phase 2: Design & Architecture
-- Choose the appropriate architectural approach
-- Identify which design patterns to apply
-- Keep the design simple and clean - avoid over-engineering
-- Prefer simple solutions over complex ones (KISS principle)
-- Check for similar implementations in the codebase
-- Plan data flow and component interactions
+#### Step 1: Requirements Documentation (Feature Specification)
+**AI Agent Actions:**
+1. Analyze the feature request
+2. Create requirements document in `docs/features/[feature-name].md`
+3. The document must include:
+   - **Overview**: What the feature does and why it's needed
+   - **Problem Statement**: Current issues and pain points
+   - **Proposed Solution**: Explain the approach
+   - **User Experience**: Before/after scenarios with examples
+   - **UI/UX Design**: Visual specifications and mockups (if applicable)
+   - **Technical Approach**: High-level technical strategy
+   - **Success Criteria**: Clear acceptance criteria
+   - **Future Enhancements**: Potential improvements (optional)
 
-#### Phase 3: Implementation Plan
-- Create a detailed checklist document with all tasks needed to complete the development
-- Break down the feature into small, manageable steps
-- Each item should be specific and actionable
-- The AI agent will follow this checklist along with the coding rules below
+4. **⚠️ STOP HERE** - Present the requirements document to the user
+5. Wait for user review and approval before proceeding
 
-**Example Implementation Plan Document:**
+**Example Requirements Document Structure:**
 ```markdown
-# Feature: User Authentication
+# Feature Name - Specification
 
-## Tasks Checklist
-- [ ] Create User model with email and password fields
-- [ ] Implement password hashing utility
-- [ ] Create authentication middleware
-- [ ] Add login endpoint
-- [ ] Add registration endpoint
-- [ ] Add JWT token generation
-- [ ] Implement token validation
-- [ ] Add error handling for invalid credentials
-- [ ] Write unit tests for auth service
-- [ ] Write integration tests for auth endpoints
-- [ ] Update API documentation
+## Overview
+What this feature does and why.
+
+## Problem Statement
+### Current Issues
+- Issue 1: Description
+- Issue 2: Description
+
+## Proposed Solution
+Explain the approach...
+
+## User Experience
+### Before (Current State)
+Example scenario...
+
+### After (With New Feature)
+Example scenario...
+
+## Technical Approach
+High-level technical strategy...
+
+## Success Criteria
+- [ ] Requirement 1
+- [ ] Requirement 2
 ```
 
-### 2. Writing Code
+#### Step 2: Implementation Plan (Development Checklist)
+**AI Agent Actions (after requirements approval):**
+1. Create implementation plan in `docs/plans/[feature-name]-plan.md`
+2. The plan must be structured with:
+   - **Overview**: Reference to the feature specification
+   - **Development Checklist**: Organized by phases with checkboxes
+   - **Technical Implementation Details**: Architecture decisions and rationale
+   - **File Structure**: List of all files to create/modify
+   - **Testing Strategy**: Unit, integration, and manual testing requirements
+   - **Code Examples**: Key code snippets for complex parts
+   - **References**: Links to relevant documentation
+
+3. Break down implementation into **clear phases**:
+   - Phase 1: Documentation (this phase - always completed first)
+   - Phase 2: Core utilities/logic
+   - Phase 3: UI components (if applicable)
+   - Phase 4: Backend modifications (if applicable)
+   - Phase 5: Frontend integration
+   - Phase 6: Testing (unit + manual)
+   - Phase 7: Code review & quality checks
+   - Phase 8: Deployment preparation
+
+4. Each phase must have:
+   - Numbered tasks with checkboxes `[ ]`
+   - Specific, actionable items
+   - Clear completion criteria
+   - Reference to AGENTS.md guidelines where applicable
+
+5. **⚠️ STOP HERE** - Present the implementation plan to the user
+6. Wait for user review and approval before starting implementation
+
+**Example Implementation Plan Structure:**
+```markdown
+# Feature Name - Implementation Plan
+
+## Overview
+Implementation guide for [Feature Name] as specified in `docs/features/[feature-name].md`.
+Follows guidelines in AGENTS.md.
+
+## Development Checklist
+
+### Phase 1: Documentation ✅ COMPLETED
+- [x] Create feature specification
+- [x] Create implementation plan
+
+### Phase 2: Core Utilities
+- [ ] **Task 2.1**: Create utility file `lib/[utility-name].ts`
+  - [ ] Implement function X
+  - [ ] Add TypeScript types
+  - [ ] Add JSDoc comments
+  - [ ] Handle edge cases
+
+- [ ] **Task 2.2**: Write unit tests
+  - [ ] Test happy path
+  - [ ] Test error cases
+  - [ ] Achieve >80% coverage
+
+### Phase 3: [Next Phase]
+- [ ] **Task 3.1**: Description
+  - [ ] Subtask 1
+  - [ ] Subtask 2
+
+[Continue with all phases...]
+
+## Technical Implementation Details
+
+### Architecture Decision: [Decision Name]
+**Decision**: What approach to use
+**Rationale**: Why this approach
+- Reason 1
+- Reason 2
+
+### File Structure
+All files to create or modify with descriptions.
+
+## Testing Strategy
+Testing approach...
+
+## References
+- AGENTS.md
+- docs/features/[feature-name].md
+- Relevant external documentation
+```
+
+#### Step 3: Implementation
+**AI Agent Actions (after plan approval):**
+1. Follow the approved plan
+2. Mark tasks as completed with `[x]`
+3. Follow all coding standards in AGENTS.md:
+   - Code style and naming conventions
+   - Error handling patterns
+   - Testing requirements
+   - Documentation standards
+4. Implement one phase at a time
+5. Update the plan checklist as tasks are completed
+6. Ask for clarification if requirements are ambiguous
+
+#### Step 4: Review and Completion
+**After implementation:**
+1. Run all tests and linters
+2. Complete the code review checklist (see section 8)
+3. Update `docs/features.md` with the new feature documentation
+4. Move the completed feature spec from `docs/features/` to archive (or remove)
+5. Keep the plan in `docs/plans/` for historical reference
+6. Present the completed work to the user
+
+### 2. Key Principles for Feature Development
+
+- **User Approval Required**: Never proceed to implementation without user approval of both requirements and plan
+- **One Phase at a Time**: Complete each phase fully before moving to the next
+- **Follow the Plan**: Stick to the approved plan; if changes are needed, discuss with user first
+- **Documentation First**: Always document before coding
+- **Testing Mandatory**: Every feature must have tests (>80% coverage)
+- **AGENTS.md Compliance**: All code must follow the guidelines in this document
+
+### 3. Writing Code
 - Write self-documenting code with clear variable names
 - Add JSDoc comments for functions and classes
 - Keep functions small and focused (single responsibility)
@@ -151,21 +319,21 @@ project-root/
 - Validate all inputs
 - Handle edge cases explicitly
 
-### 3. Dependencies
+### 4. Dependencies
 - Use npm for package management
 - Keep dependencies up to date
 - Prefer well-maintained packages with active communities
 - Check package size and bundle impact
 - Review security vulnerabilities: `npm audit`
 
-### 4. Environment Variables
+### 5. Environment Variables
 - Never commit `.env` files
 - Use `.env.example` as a template
 - Document all required environment variables
 - Use a library like `dotenv` for loading env vars
 - Validate required env vars on startup
 
-### 5. Testing
+### 6. Testing
 - Write unit tests for all new features (mandatory)
 - Write a few end-to-end tests for critical user flows
 - Integration tests are optional
@@ -174,7 +342,7 @@ project-root/
 - Test error cases, not just happy paths
 - Run tests before committing: `npm test`
 
-### 6. Git Workflow
+### 7. Git Workflow
 - Commit messages: use conventional commits format
   - `feat:` new feature
   - `fix:` bug fix
@@ -186,7 +354,7 @@ project-root/
 - Make atomic commits (one logical change per commit)
 - Review your own code before pushing
 
-### 7. Code Review Checklist
+### 8. Code Review Checklist
 - [ ] Code follows style guidelines
 - [ ] No console.logs left in code (use proper logging)
 - [ ] Error handling is implemented
@@ -198,10 +366,10 @@ project-root/
 ## Best Practices
 
 ### Design Patterns
-- Use Singleton pattern when a single instance is required (e.g., database connections, external service clients)
+- Use Singleton for single instances (database connections, service clients)
 - Implement lifecycle management for long-lived resources
-- Use dependency injection for better testability
-- Apply separation of concerns principle
+- Use dependency injection for testability
+- Apply separation of concerns
 
 ### Async Operations
 ```javascript
@@ -251,18 +419,18 @@ const createUser = async (userData) => {
 
 ### Performance
 - Use connection pooling for databases
-- Implement caching where appropriate (Redis, in-memory)
+- Implement caching (Redis, in-memory)
 - Use pagination for large datasets
 - Avoid N+1 queries
 - Profile and optimize bottlenecks
 - Use streams for large file operations
 - Implement health checks for external connections
-- Reuse instances and connections when possible (singleton pattern)
+- Reuse instances and connections (singleton pattern)
 
 ### Logging
-- Use a logging library (winston, pino, bunyan) or create a custom structured logger
-- Create dedicated logger classes for specific modules when needed
-- Include appropriate context in logs
+- Use a logging library (winston, pino, bunyan) or create custom logger
+- Create dedicated logger classes for specific modules
+- Include context in logs
 - Use different log levels: error, warn, info, debug
 - Never log sensitive information (passwords, tokens)
 - Include request IDs for tracing
@@ -319,11 +487,11 @@ class UserService {
 ### Function Documentation
 ```javascript
 /**
- * Retrieves user by ID from the database
- * @param {string} userId - The unique identifier of the user
- * @returns {Promise<Object>} The user object without sensitive fields
- * @throws {NotFoundError} When user is not found
- * @throws {DatabaseError} When database operation fails
+ * Get user by ID
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} User object without sensitive fields
+ * @throws {NotFoundError} User not found
+ * @throws {DatabaseError} Database operation failed
  */
 async function getUserById(userId) {
   // Implementation
@@ -392,5 +560,4 @@ npm update
 
 ---
 
-*Last updated: 2025-10-15*
-*Adapt these guidelines to your specific project needs*
+*Last updated: 2025-10-18*

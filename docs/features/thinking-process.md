@@ -2,7 +2,7 @@
 
 ## Overview
 
-This feature enhances the MCP Chat Client (Archimede) to display the AI's reasoning process in **real-time** as it streams, providing transparent visibility into how the AI approaches each query. Unlike traditional post-completion displays, thinking steps appear **progressively** as the AI generates them, creating an engaging and educational experience. It also improves error handling by hiding technical error messages while maintaining detailed logging for developers.
+Display the AI's reasoning process in **real-time** as it streams. Thinking steps appear **progressively** as the AI generates them. Also improves error handling by hiding technical errors while maintaining detailed logging.
 
 ## Problem Statement
 
@@ -28,7 +28,7 @@ This feature enhances the MCP Chat Client (Archimede) to display the AI's reason
 
 ### 1. Real-Time AI Thinking Process Visualization
 
-Display the AI's reasoning steps **progressively as they're generated**, appearing before the final answer in real-time.
+Display reasoning steps **progressively as generated**, before the final answer.
 
 **Key Features**:
 - **Real-time streaming**: Thinking steps appear as AI generates them
@@ -39,15 +39,15 @@ Display the AI's reasoning steps **progressively as they're generated**, appeari
 - Explanation of retry logic when searches fail
 
 **Benefits**:
-- Users see AI working in real-time (engaging experience)
-- Trust increases through transparency
-- Educational value: users learn about segmentation strategies step-by-step
-- Better debugging when results are unexpected
-- No waiting to understand what's happening
+- Users see AI working in real-time
+- Increased trust through transparency
+- Educational: learn segmentation strategies step-by-step
+- Better debugging for unexpected results
+- Immediate understanding
 
 ### 2. Improved Error Handling
 
-Hide technical errors from the user interface while maintaining comprehensive logging for developers.
+Hide technical errors from UI while maintaining full logging for developers.
 
 **Key Features**:
 - No more red error messages in chat
@@ -64,7 +64,7 @@ Hide technical errors from the user interface while maintaining comprehensive lo
 
 ### 3. Real-Time Retry Strategy Display
 
-Show users **as it happens** when the AI is trying alternative approaches to find information.
+Show in real-time when AI tries alternative approaches.
 
 **Key Features**:
 - Thinking steps appear in real-time during search attempts
@@ -74,9 +74,9 @@ Show users **as it happens** when the AI is trying alternative approaches to fin
 - Live progress indicator shows AI is actively working
 
 **Benefits**:
-- Users see the AI is working hard to help them in real-time
-- Reduces perception of "no results" as a failure
-- Educational: shows different ways to search for information as they happen
+- Users see AI is working hard in real-time
+- Reduces "no results" as failure perception
+- Educational: shows different search approaches
 - Engaging: creates sense of active problem-solving
 
 ## User Experience
@@ -163,12 +163,12 @@ Ecco i tenant che corrispondono alla tua ricerca:
 ```
 
 **Benefits**:
-- User sees AI's thought process **in real-time**
-- Retry attempts visible **as they happen**
-- No technical errors in the chat UI
-- Educational: user learns about search strategies step-by-step
+- Real-time thought process visibility
+- Retry attempts visible as they happen
+- No technical errors in chat UI
+- Educational: learn search strategies step-by-step
 - Increased trust through live transparency
-- Engaging: creates sense of active problem-solving
+- Engaging: sense of active problem-solving
 
 ## UI Design
 
@@ -185,11 +185,11 @@ Ecco i tenant che corrispondono alla tua ricerca:
 
 **Step Appearance**:
 - Each step is a separate box
-- No icons within individual steps (clean text-only display)
-- Very small font size (`text-xs`)
+- No icons (clean text-only display)
+- Small font size (`text-xs`)
 - Light font weight (`font-light`)
-- Adequate spacing between steps (`space-y-1.5`)
-- Staggered animation delay for smooth appearance
+- Adequate spacing (`space-y-1.5`)
+- Staggered animation delay
 
 **Loading States**:
 - Spinner icon during streaming (in header only)
@@ -222,12 +222,12 @@ Ecco i tenant che corrispondono alla tua ricerca:
    - Each thinking step appears immediately as it's generated
 
 2. **Why this approach**:
-   - **Real-time visibility**: Users see thinking as it happens
-   - **Model-agnostic**: Works with any provider
-   - **Progressive disclosure**: Steps appear sequentially
-   - **Simple parsing**: Line-by-line prefix detection
-   - **No state management**: React re-renders handle everything
-   - **Engaging UX**: Creates sense of AI actively working
+   - Real-time visibility
+   - Model-agnostic (works with any provider)
+   - Progressive disclosure (sequential steps)
+   - Simple parsing (line-by-line prefix detection)
+   - No state management (React re-renders handle it)
+   - Engaging UX
 
 ### Data Flow
 

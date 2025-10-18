@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a detailed, step-by-step implementation guide for the **Real-Time Progressive Thinking Process** feature as specified in `thinking-process.md`. This implementation uses a prefix-based streaming approach where thinking steps appear progressively as the AI generates them, creating an engaging real-time experience. The plan follows the development guidelines outlined in AGENTS.md.
+Implementation guide for **Real-Time Progressive Thinking Process** as specified in `docs/features/thinking-process.md`. Uses prefix-based streaming where thinking steps appear progressively as AI generates them. Follows guidelines in AGENTS.md.
 
 ## Development Checklist
 
@@ -152,22 +152,22 @@ This document provides a detailed, step-by-step implementation guide for the **R
 
 ### 1. Architecture Decision: Real-Time Prefix-Based Streaming
 
-**Decision**: Use prefix-based prompt engineering with progressive frontend parsing rather than marker-based or tool-call tracking.
+**Decision**: Use prefix-based prompt engineering with progressive frontend parsing.
 
 **Rationale**:
-- **Real-time visibility**: Users see thinking AS IT HAPPENS
-- **Model-agnostic**: Works with any AI provider (Gemini, Anthropic, OpenAI, Ollama)
-- **No infrastructure changes**: Leverages existing streaming setup
-- **Simple parsing**: Line-by-line prefix detection (no complex state)
-- **Engaging UX**: Creates sense of AI actively working
-- **React-friendly**: Natural re-renders on content updates
-- **No latency overhead**: Thinking streams with the response
+- Real-time visibility: users see thinking as it happens
+- Model-agnostic: works with any AI provider
+- No infrastructure changes: leverages existing streaming
+- Simple parsing: line-by-line prefix detection
+- Engaging UX
+- React-friendly: natural re-renders
+- No latency overhead
 
-**Alternative considered**: Marker-based post-processing (---THINKING-START---)
-- **Rejected because**: Requires waiting for full response, no real-time visibility
+**Alternative considered**: Marker-based post-processing
+- Rejected: requires waiting for full response
 
 **Alternative considered**: Tool call tracking via `onStepFinish`
-- **Rejected because**: Complex state management, provider-specific, no control over format
+- Rejected: complex state management, provider-specific
 
 ### 2. Thinking Prefix Format
 
@@ -179,11 +179,11 @@ This document provides a detailed, step-by-step implementation guide for the **R
 ```
 
 **Rationale**:
-- **Simple to parse**: Line-by-line prefix detection
-- **Clear visual marker**: `💭 THINK:` unlikely to appear in normal content
-- **One step per line**: Clean separation, easy animation
-- **Easy for AI**: Simpler than structured markers
-- **Debuggable**: Can see exact output in network tab
+- Simple to parse: line-by-line prefix detection
+- Clear visual marker: `💭 THINK:` unlikely in normal content
+- One step per line: clean separation, easy animation
+- Easy for AI: simpler than structured markers
+- Debuggable: see exact output in network tab
 
 **Alternatives considered**:
 - Marker blocks (START/END): Requires full completion, no progressive display
@@ -195,12 +195,12 @@ This document provides a detailed, step-by-step implementation guide for the **R
 **Decision**: Each thinking step is a separate box that fades in sequentially. No icons inside steps.
 
 **Rationale**:
-- **Real-time feedback**: Users see progress as it happens
-- **Non-intrusive**: Small, light boxes don't dominate the UI
-- **Clean text display**: No icons cluttering individual steps (icon only in header)
-- **Engaging**: Fade-in animations create sense of activity
-- **Educational**: Step-by-step visibility
-- **Performance**: Optimized with useMemo, GPU-accelerated animations
+- Real-time feedback: users see progress as it happens
+- Non-intrusive: small boxes don't dominate UI
+- Clean text display: no icons in steps (icon only in header)
+- Engaging: fade-in animations
+- Educational: step-by-step visibility
+- Performance: optimized with useMemo, GPU-accelerated animations
 
 **Alternative considered**: Single collapsible section
 - **Rejected because**: Hides real-time nature, less engaging, requires waiting for completion
