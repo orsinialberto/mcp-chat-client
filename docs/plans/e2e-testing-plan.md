@@ -11,77 +11,77 @@ Follows guidelines in AGENTS.md.
 - [x] Create implementation plan
 - [x] Commit and push documentation
 
-### Phase 2: Playwright Setup
-- [ ] **Task 2.1**: Install Playwright dependencies
-  - [ ] Run `npm install -D @playwright/test`
-  - [ ] Run `npx playwright install`
-  - [ ] Verify installation success
+### Phase 2: Playwright Setup ✅ COMPLETED
+- [x] **Task 2.1**: Install Playwright dependencies
+  - [x] Run `npm install -D @playwright/test`
+  - [x] Run `npx playwright install`
+  - [x] Verify installation success
 
-- [ ] **Task 2.2**: Create Playwright configuration
-  - [ ] Create `playwright.config.ts` in project root
-  - [ ] Configure test directory as `e2e/`
-  - [ ] Set base URL to `http://localhost:3000`
-  - [ ] Configure webServer to auto-start Next.js
-  - [ ] Set timeout to 120s for dev server startup
-  - [ ] Enable screenshot on failure
-  - [ ] Configure trace on first retry
+- [x] **Task 2.2**: Create Playwright configuration
+  - [x] Create `playwright.config.ts` in project root
+  - [x] Configure test directory as `e2e/`
+  - [x] Set base URL to `http://localhost:3000`
+  - [x] Configure webServer to auto-start Next.js
+  - [x] Set timeout to 120s for dev server startup
+  - [x] Enable screenshot on failure
+  - [x] Configure trace on first retry
 
-- [ ] **Task 2.3**: Update package.json scripts
-  - [ ] Add `test:e2e` script
-  - [ ] Add `test:e2e:ui` script for UI mode
-  - [ ] Add `test:e2e:debug` script for debugging
+- [x] **Task 2.3**: Update package.json scripts
+  - [x] Add `test:e2e` script
+  - [x] Add `test:e2e:ui` script for UI mode
+  - [x] Add `test:e2e:debug` script for debugging
 
-### Phase 3: Core E2E Tests
-- [ ] **Task 3.1**: Create test directory and base test file
-  - [ ] Create `e2e/` directory
-  - [ ] Create `e2e/chat.spec.ts` file
-  - [ ] Add test imports and setup
+### Phase 3: Core E2E Tests ✅ COMPLETED
+- [x] **Task 3.1**: Create test directory and base test file
+  - [x] Create `e2e/` directory
+  - [x] Create `e2e/chat.spec.ts` file
+  - [x] Add test imports and setup
 
-- [ ] **Task 3.2**: Implement basic message test
-  - [ ] Navigate to chat page
-  - [ ] Wait for page load
-  - [ ] Find input field
-  - [ ] Send "ciao" message
-  - [ ] Verify user message appears in UI
-  - [ ] Verify loading indicator appears
-  - [ ] Wait for assistant response
-  - [ ] Verify assistant message appears
+- [x] **Task 3.2**: Implement basic message test
+  - [x] Navigate to chat page
+  - [x] Wait for page load
+  - [x] Find input field
+  - [x] Send "ciao" message
+  - [x] Verify user message appears in UI
+  - [x] Verify loading indicator appears
+  - [x] Wait for assistant response
+  - [x] Verify assistant message appears
 
-- [ ] **Task 3.3**: Implement API-UI sync verification test
-  - [ ] Intercept `/api/chat` route
-  - [ ] Track API call and response
-  - [ ] Send test message
-  - [ ] Verify API returns 200
-  - [ ] Verify API response is not empty
-  - [ ] Verify message appears in DOM
-  - [ ] Verify message content is not empty
-  - [ ] Verify loading spinner disappears
-  - [ ] Fail test if API succeeds but UI doesn't update
+- [x] **Task 3.3**: Implement API-UI sync verification test
+  - [x] Intercept `/api/chat` route
+  - [x] Track API call and response
+  - [x] Send test message
+  - [x] Verify API returns 200
+  - [x] Verify API response is not empty
+  - [x] Verify message appears in DOM
+  - [x] Verify message content is not empty
+  - [x] Verify loading spinner disappears
+  - [x] Fail test if API succeeds but UI doesn't update
 
-### Phase 4: Advanced Tests
-- [ ] **Task 4.1**: Multiple messages test
-  - [ ] Send first message
-  - [ ] Wait for response
-  - [ ] Send second message
-  - [ ] Verify both messages visible
+### Phase 4: Advanced Tests ✅ COMPLETED
+- [x] **Task 4.1**: Multiple messages test
+  - [x] Send first message
+  - [x] Wait for response
+  - [x] Send second message
+  - [x] Verify both messages visible
 
-- [ ] **Task 4.2**: New chat creation test
-  - [ ] Open sidebar
-  - [ ] Click "Nuova Chat" button
-  - [ ] Verify new chat created
-  - [ ] Verify empty message list
+- [x] **Task 4.2**: New chat creation test
+  - [x] Open sidebar
+  - [x] Click "Nuova Chat" button
+  - [x] Verify new chat created
+  - [x] Verify empty message list
 
-- [ ] **Task 4.3**: LocalStorage persistence test
-  - [ ] Send message and get response
-  - [ ] Verify data saved in localStorage
-  - [ ] Reload page
-  - [ ] Verify messages still visible
+- [x] **Task 4.3**: LocalStorage persistence test
+  - [x] Send message and get response
+  - [x] Verify data saved in localStorage
+  - [x] Reload page
+  - [x] Verify messages still visible
 
-- [ ] **Task 4.4**: UI-only tests (no API required)
-  - [ ] Test chat interface renders
-  - [ ] Test welcome message displays
-  - [ ] Test quick action buttons visible
-  - [ ] Test user message appears after send
+- [x] **Task 4.4**: UI-only tests (no API required)
+  - [x] Test chat interface renders
+  - [x] Test welcome message displays
+  - [x] Test quick action buttons visible
+  - [x] Test user message appears after send
 
 ### Phase 5: Error Handling Tests
 - [ ] **Task 5.1**: Test without API key
