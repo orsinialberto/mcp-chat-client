@@ -56,7 +56,7 @@ Create a `.env.local` file in the project root with the following variables:
 ```bash
 # AI Provider API Keys (at least one is required)
 GEMINI_API_KEY=your_gemini_api_key_here
-TEST_API_KEY=your_anthropic_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
 ```
 
 ### Optional Configuration
