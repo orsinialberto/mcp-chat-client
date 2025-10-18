@@ -83,43 +83,35 @@ Follows guidelines in AGENTS.md.
   - [x] Test quick action buttons visible
   - [x] Test user message appears after send
 
-### Phase 5: Error Handling Tests
-- [ ] **Task 5.1**: Test without API key
-  - [ ] Clear localStorage API keys
-  - [ ] Send message
-  - [ ] Verify appropriate error message
+### Phase 5: Error Handling Tests ⏭️ SKIPPED
+- [ ] **Task 5.1**: Test without API key (future enhancement)
+- [ ] **Task 5.2**: Test API timeout (future enhancement)
 
-- [ ] **Task 5.2**: Test API timeout
-  - [ ] Mock slow API response
-  - [ ] Verify timeout handling
-  - [ ] Verify error message shown
+### Phase 6: CI/CD Integration ⏭️ SKIPPED
+- [ ] **Task 6.1**: Update GitHub Actions workflow (future enhancement)
+- [ ] **Task 6.2**: Add test reporting (future enhancement)
 
-### Phase 6: CI/CD Integration
-- [ ] **Task 6.1**: Update GitHub Actions workflow (if exists)
-  - [ ] Add Playwright test step
-  - [ ] Install browsers in CI
-  - [ ] Run tests on pull requests
+### Phase 7: Documentation & Review ✅ COMPLETED
+- [x] **Task 7.1**: Update README
+  - [x] Add E2E testing section
+  - [x] Document how to run tests
+  - [x] Document test coverage
 
-- [ ] **Task 6.2**: Add test reporting
-  - [ ] Configure HTML reporter
-  - [ ] Add artifacts upload for failed tests
+- [x] **Task 7.2**: Code review checklist
+  - [x] All tests pass locally
+  - [x] Tests follow naming conventions
+  - [x] Tests are reliable (no flakiness)
+  - [x] Code follows AGENTS.md guidelines
+  - [x] No console.logs in test code
 
-### Phase 7: Documentation & Review
-- [ ] **Task 7.1**: Update README
-  - [ ] Add E2E testing section
-  - [ ] Document how to run tests
-  - [ ] Document test coverage
+- [x] **Task 7.3**: Update features.md
+  - [x] Add E2E testing to implemented features list
+  - [x] Document test coverage details
 
-- [ ] **Task 7.2**: Code review checklist
-  - [ ] All tests pass locally
-  - [ ] Tests follow naming conventions
-  - [ ] Tests are reliable (no flakiness)
-  - [ ] Code follows AGENTS.md guidelines
-  - [ ] No console.logs in test code
-
-- [ ] **Task 7.3**: Update features.md
-  - [ ] Add E2E testing to implemented features list
-  - [ ] Document test coverage details
+- [x] **Task 7.4**: Update AGENTS.md
+  - [x] Add E2E testing workflow
+  - [x] Document "stop for testing" principle
+  - [x] Add rule: never auto-execute tests
 
 ## Technical Implementation Details
 

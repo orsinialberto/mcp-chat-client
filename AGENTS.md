@@ -292,15 +292,20 @@ Testing approach...
 4. Implement one phase at a time
 5. Update the plan checklist as tasks are completed
 6. **⚠️ STOP after each phase** - Present completed work to the user for:
+   - **E2E Testing** (run `npm run test:e2e` to verify functionality)
    - Manual testing
    - Code review
    - Verification before proceeding
-7. Wait for user approval before starting the next phase
-8. Ask for clarification if requirements are ambiguous
+7. **Never execute tests automatically** - Always wait for user to run them
+8. Wait for user approval before starting the next phase
+9. Ask for clarification if requirements are ambiguous
 
 #### Step 4: Review and Completion
 **After implementation:**
-1. Run all tests and linters
+1. Present code to user for final testing:
+   - User runs `npm run test:e2e` to verify E2E tests pass
+   - User runs `npm test` to verify unit tests pass
+   - User runs `npm run lint` to check code quality
 2. Complete the code review checklist (see section 8)
 3. Update `docs/features.md` with the new feature documentation
 4. Move the completed feature spec from `docs/features/` to archive (or remove)
@@ -311,6 +316,8 @@ Testing approach...
 
 - **User Approval Required**: Never proceed to implementation without user approval of both requirements and plan
 - **One Phase at a Time**: Complete each phase fully before moving to the next
+- **Stop for Testing**: After each phase, stop and let user run E2E tests (`npm run test:e2e`)
+- **Never Auto-Execute Tests**: AI must never run tests automatically; always wait for user
 - **Follow the Plan**: Stick to the approved plan; if changes are needed, discuss with user first
 - **Documentation First**: Always document before coding
 - **Testing Mandatory**: Every feature must have tests (>80% coverage)
@@ -339,13 +346,29 @@ Testing approach...
 - Validate required env vars on startup
 
 ### 6. Testing
+
+#### Unit Tests (Jest)
 - Write unit tests for all new features (mandatory)
-- Write a few end-to-end tests for critical user flows
-- Integration tests are optional
-- Use Jest or Mocha as testing framework
+- Use Jest as testing framework
 - Aim for >80% code coverage
 - Test error cases, not just happy paths
-- Run tests before committing: `npm test`
+- Command: `npm test`
+
+#### End-to-End Tests (Playwright)
+- Write E2E tests for critical user flows
+- Verify complete workflows (UI → API → UI)
+- Test API-UI synchronization
+- Command: `npm run test:e2e`
+- **IMPORTANT**: AI must NEVER execute E2E tests automatically
+- **Always stop after each phase** and let user run tests manually
+
+#### Testing Workflow
+1. AI implements feature/phase
+2. AI stops and informs user: "Ready for testing. Please run `npm run test:e2e`"
+3. User runs tests manually
+4. User reports results to AI
+5. If tests pass, proceed to next phase
+6. If tests fail, AI fixes issues and repeats from step 2
 
 ### 7. Git Workflow
 - Commit messages: use conventional commits format
