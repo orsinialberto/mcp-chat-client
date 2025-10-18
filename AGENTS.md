@@ -291,7 +291,12 @@ Testing approach...
    - Documentation standards
 4. Implement one phase at a time
 5. Update the plan checklist as tasks are completed
-6. Ask for clarification if requirements are ambiguous
+6. **⚠️ STOP after each phase** - Present completed work to the user for:
+   - Manual testing
+   - Code review
+   - Verification before proceeding
+7. Wait for user approval before starting the next phase
+8. Ask for clarification if requirements are ambiguous
 
 #### Step 4: Review and Completion
 **After implementation:**
